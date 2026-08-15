@@ -6,7 +6,6 @@ import { crearClienteNavegador } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = crearClienteNavegador();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -17,6 +16,11 @@ export default function LoginPage() {
     setError(null);
     setCargando(true);
 
+    // El cliente se crea aquí adentro, no en el cuerpo del componente: si se
+    // creara arriba, Next.js lo ejecutaría también al pre-renderizar esta
+    // página en el build, y si las variables de entorno de Supabase no están
+    // disponibles en ese momento, tumbaría el build entero.
+    const supabase = crearClienteNavegador();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     setCargando(false);

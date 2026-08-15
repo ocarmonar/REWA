@@ -4,12 +4,12 @@ import { useState } from "react";
 import { crearClienteNavegador } from "@/lib/supabase/client";
 
 export default function RecuperarPage() {
-  const supabase = crearClienteNavegador();
   const [email, setEmail] = useState("");
   const [enviado, setEnviado] = useState(false);
 
   async function manejarSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const supabase = crearClienteNavegador();
     await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/actualizar-contrasena`,
     });
