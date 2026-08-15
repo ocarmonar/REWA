@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="es-EC">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Club Deportivo REWA — Demo</title>
+<style>
+:root{
+  --azul:#0d3b66; --azul-dark:#092845; --azul-bg:#e7eef6;
+  --verde:#2e7d32; --verde-bg:#e8f5e9;
+  --ambar:#b7791f; --ambar-bg:#fff8e1;
+  --rojo:#c62828; --rojo-bg:#fdecea;
+  --gris:#6b7280; --gris-bg:#f1f2f4;
+  --bg:#f7f8fa; --card:#ffffff; --border:#e3e6ea; --text:#1f2530;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:14px}
+a{color:inherit}
+h1,h2,h3{margin:0}
+.hidden{display:none !important}
+
+/* ---------- Login ---------- */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--azul),var(--azul-dark));padding:20px}
+.login-card{background:#fff;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.25);width:100%;max-width:420px;padding:36px}
+.login-logo{text-align:center;margin-bottom:22px}
+.login-logo .badge{display:inline-block;background:var(--azul);color:#fff;width:56px;height:56px;border-radius:50%;font-weight:800;font-size:20px;line-height:56px;margin-bottom:10px}
+.login-logo h1{font-size:20px;color:var(--azul)}
+.login-logo p{color:var(--gris);font-size:13px;margin-top:4px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:#374151}
+.field input,.field select,.field textarea{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--azul)}
+.btn{border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600}
+.btn-primary{background:var(--azul);color:#fff}
+.btn-primary:hover{background:var(--azul-dark)}
+.btn-outline{background:#fff;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{background:var(--gris-bg)}
+.btn-danger{background:var(--rojo-bg);color:var(--rojo)}
+.btn-verde{background:var(--verde);color:#fff}
+.btn-sm{padding:6px 10px;font-size:12.5px}
+.btn-block{width:100%}
+.btn-link{background:none;border:none;color:var(--azul);font-weight:600;padding:0}
+.demo-users{margin-top:18px;border-top:1px dashed var(--border);padding-top:16px}
+.demo-users p{font-size:12.5px;color:var(--gris);margin:0 0 8px}
+.demo-user-btn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:var(--azul-bg);border:1px solid transparent;border-radius:8px;padding:9px 12px;margin-bottom:7px;font-size:13px}
+.demo-user-btn:hover{border-color:var(--azul)}
+.demo-user-btn small{color:var(--gris);font-weight:400}
+
+/* ---------- Layout ---------- */
+.app-shell{display:flex;min-height:100vh}
+.topbar{display:none;position:sticky;top:0;background:var(--azul);color:#fff;padding:10px 14px;align-items:center;gap:10px;z-index:20}
+.topbar button{background:none;border:none;color:#fff;font-size:20px}
+.sidebar{width:230px;flex-shrink:0;background:var(--azul);color:#fff;min-height:100vh;display:flex;flex-direction:column;position:sticky;top:0;align-self:flex-start;height:100vh}
+.sidebar .brand{padding:20px 18px;border-bottom:1px solid rgba(255,255,255,.12)}
+.sidebar .brand b{display:block;font-size:15px}
+.sidebar .brand span{font-size:12px;opacity:.7}
+.sidebar nav{flex:1;padding:12px;overflow-y:auto}
+.sidebar nav a{display:block;padding:9px 12px;border-radius:8px;color:#fff;text-decoration:none;font-size:13.5px;font-weight:500;margin-bottom:3px;opacity:.85}
+.sidebar nav a:hover{background:rgba(255,255,255,.08);opacity:1}
+.sidebar nav a.active{background:rgba(255,255,255,.18);opacity:1}
+.sidebar .user{padding:14px 16px;border-top:1px solid rgba(255,255,255,.12);font-size:12.5px}
+.sidebar .user .name{font-weight:600;margin-bottom:2px}
+.sidebar .user .role{opacity:.7;text-transform:capitalize;margin-bottom:8px}
+.main{flex:1;padding:26px;min-width:0}
+.demo-banner{background:#fef3c7;color:#92400e;font-size:12.5px;padding:7px 14px;text-align:center;font-weight:600}
+
+@media (max-width:860px){
+  .topbar{display:flex}
+  .sidebar{position:fixed;left:0;top:0;height:100vh;transform:translateX(-100%);transition:transform .2s;z-index:30}
+  .sidebar.open{transform:translateX(0)}
+  .main{padding:16px}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:25}
+}
+
+/* ---------- Componentes ---------- */
+.page-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.page-head h1{font-size:20px;color:var(--azul)}
+.page-head .sub{color:var(--gris);font-size:13px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
+.grid{display:grid;gap:14px}
+.grid-kpi{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.kpi .t{font-size:12.5px;color:var(--gris);margin-bottom:6px}
+.kpi .v{font-size:22px;font-weight:800}
+.badge{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px}
+.b-verde{background:var(--verde-bg);color:var(--verde)}
+.b-ambar{background:var(--ambar-bg);color:var(--ambar)}
+.b-rojo{background:var(--rojo-bg);color:var(--rojo)}
+.b-gris{background:var(--gris-bg);color:var(--gris)}
+.b-azul{background:var(--azul-bg);color:var(--azul)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;color:var(--gris);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.02em;padding:9px 12px;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;overflow-x:auto}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.toolbar input,.toolbar select{padding:8px 10px;border:1px solid var(--border);border-radius:8px}
+.empty{padding:30px;text-align:center;color:var(--gris);font-size:13.5px}
+.session-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.session-item .r{font-weight:700}
+.session-item .c{color:var(--gris);font-size:12.5px}
+.attn-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+.attn-card .nm{font-weight:600;margin-bottom:8px;font-size:13.5px}
+.state-btns{display:flex;flex-wrap:wrap;gap:6px}
+.state-btn{border:1px solid var(--border);background:#fff;color:var(--gris);border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;min-height:38px}
+.state-btn.sel-presente{background:var(--verde-bg);color:var(--verde);border-color:transparent}
+.state-btn.sel-falta{background:var(--rojo-bg);color:var(--rojo);border-color:transparent}
+.state-btn.sel-tarde{background:var(--ambar-bg);color:var(--ambar);border-color:transparent}
+.state-btn.sel-justificado, .state-btn.sel-permiso{background:var(--azul-bg);color:var(--azul);border-color:transparent}
+.state-btn.sel-lesionado{background:var(--gris-bg);color:var(--gris);border-color:transparent}
+.save-bar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border);padding:12px;margin:20px -18px -18px;border-radius:0 0 12px 12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:600px){.two-col{grid-template-columns:1fr}}
+.section-title{font-weight:700;margin-bottom:10px;font-size:14.5px}
+dl.breakdown{display:grid;grid-template-columns:1fr auto;gap:6px 10px;font-size:13.5px;margin:0}
+dl.breakdown dt{color:var(--gris)}
+dl.breakdown dd{margin:0;text-align:right}
+dl.breakdown .tot dt,dl.breakdown .tot dd{font-weight:700;border-top:1px solid var(--border);padding-top:6px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal{background:#fff;border-radius:12px;padding:22px;width:100%;max-width:420px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--azul-bg);color:var(--azul);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
+.link-back{font-size:13px;color:var(--azul);font-weight:600;text-decoration:none;display:inline-block;margin-bottom:12px}
+.import-row-error{background:var(--rojo-bg)}
+.import-row-dup{background:var(--ambar-bg)}
+.stack{display:flex;flex-direction:column;gap:4px}
+.muted{color:var(--gris);font-size:12.5px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* =========================================================================
+   UTILIDADES
+   ========================================================================= */
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = (p) => (p||'id') + '_' + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+const fmtMoney = (n) => new Intl.NumberFormat('es-EC',{style:'currency',currency:'USD'}).format(n||0);
+const fmtDate = (s) => { if(!s) return ''; const d = new Date(s+'T00:00:00'); return new Intl.DateTimeFormat('es-EC',{day:'2-digit',month:'2-digit',year:'numeric'}).format(d); };
+const fmtDateTime = (s) => { if(!s) return ''; const d = new Date(s); return new Intl.DateTimeFormat('es-EC',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(d); };
+// Formatea SIEMPRE con los componentes de fecha LOCALES (nunca toISOString,
+// que usa UTC y se desfasa un día en Ecuador -UTC-5- durante la tarde/noche).
+function dateOnly(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+const todayStr = () => dateOnly(new Date());
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
+function addDays(dateStr, n){ const d = new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n); return dateOnly(d); }
+function h(strings, ...vals){ return strings.reduce((acc,s,i)=> acc + s + (i<vals.length ? vals[i] : ''), ''); }
+
+const ETQ_ASISTENCIA = {
+  presente:{t:'Presente',cls:'b-verde'}, falta:{t:'Falta',cls:'b-rojo'}, tarde:{t:'Tarde',cls:'b-ambar'},
+  justificado:{t:'Justificado',cls:'b-azul'}, permiso:{t:'Permiso',cls:'b-azul'}, lesionado:{t:'Lesionado',cls:'b-gris'}
+};
+const ETQ_MENSUALIDAD = {
+  pendiente:{t:'Pendiente',cls:'b-gris'}, parcial:{t:'Parcial',cls:'b-ambar'}, pagado:{t:'Pagado',cls:'b-verde'},
+  vencido:{t:'Vencido',cls:'b-rojo'}, exonerado:{t:'Exonerado',cls:'b-azul'}, anulado:{t:'Anulado',cls:'b-gris'}
+};
+const ETQ_SESION = {
+  programada:{t:'Programada',cls:'b-gris'}, realizada:{t:'Realizada',cls:'b-gris'},
+  registro_completado:{t:'Registro completo',cls:'b-verde'}, sin_registro:{t:'Sin registro',cls:'b-rojo'},
+  cancelada:{t:'Cancelada',cls:'b-gris'}, reprogramada:{t:'Reprogramada',cls:'b-ambar'}
+};
+const ETQ_ESTUDIANTE = { activo:'b-verde', inactivo:'b-gris', lesionado:'b-ambar', retirado:'b-rojo' };
+
+/* =========================================================================
+   SEMILLA DE DATOS (misma composición que supabase/seed.sql: 3 campus,
+   4 ramas, 15 profesores, 60 estudiantes, horarios/sesiones/pagos de ejemplo)
+   ========================================================================= */
+const NOM_PROFES = ['Carlos','Luis','Andrés','Pablo','Jorge','Iván','Ramiro','Santiago','Marco','Xavier','Patricio','Fabián','Rodrigo','Esteban','Gabriel'];
+const APE_PROFES = ['Guamán','Cevallos','Andrade','Moreta','Villacís','Cadena','Zambrano','Naranjo','Freire','Espinoza','Coronel','Yépez','Barragán','Muñoz','Pazmiño'];
+const NOM_EST = ['Mateo','Sebastián','Emilia','Valentina','Josué','Doménica','Isaac','Camila','Martín','Renata','Julián','Sofía','Nicolás','Antonella','Samuel','Ariana','Emilio','Zoe','Adrián','Mía','David','Salomé','Thiago','Abigail','Joaquín','Victoria','Benjamín','Amelia','Gael','Regina'];
+const APE_EST = ['Rosero','Tapia','Játiva','Benítez','Quishpe','Lema','Sangucho','Vega','Aguirre','Peñafiel','Carrera','Salinas','Bautista','Ortiz','Salazar','Endara','Bravo','Cárdenas','Herrera','Toapanta'];
+
+function generarSeed(){
+  const db = { campus:[], ramas:[], usuarios:[], profesores:[], profesor_rama:[], estudiantes:[], estudiante_rama:[],
+    horarios:[], sesiones:[], asistencias:[], justificaciones:[], mensualidades:[], ajustes:[], pagos:[], auditoria:[], importaciones:[] };
+
+  db.campus = [
+    {id:'cam1', nombre:'ISM North', direccion:'Av. Eloy Alfaro N39-115, Quito', activo:true},
+    {id:'cam2', nombre:'ISM West', direccion:'Av. Occidental y Mariana de Jesús, Quito', activo:true},
+    {id:'cam3', nombre:'ISM Quito', direccion:'Av. 6 de Diciembre N24-296, Quito', activo:true},
+  ];
+  db.ramas = [
+    {id:'ram1', nombre:'Fútbol', monto_mensual_base:35, activo:true},
+    {id:'ram2', nombre:'Básquetbol', monto_mensual_base:32, activo:true},
+    {id:'ram3', nombre:'Vóleybol', monto_mensual_base:30, activo:true},
+    {id:'ram4', nombre:'Natación', monto_mensual_base:45, activo:true},
+  ];
+
+  db.usuarios.push({id:'u_admin1', nombres:'Andrea', apellidos:'Salazar Ponce', email:'admin1@rewa.ec', rol:'administrador', activo:true});
+  db.usuarios.push({id:'u_admin2', nombres:'Diego', apellidos:'Vaca Montalvo', email:'admin2@rewa.ec', rol:'administrador', activo:true});
+  db.usuarios.push({id:'u_admin3', nombres:'Mónica', apellidos:'Chávez Rivas', email:'admin3@rewa.ec', rol:'administrador', activo:true});
+  db.usuarios.push({id:'u_gerente', nombres:'Fernando', apellidos:'Torres Guerrero', email:'gerente@rewa.ec', rol:'gerente', activo:true});
+
+  for(let i=0;i<15;i++){
+    const uidP = 'u_prof'+(i+1);
+    db.usuarios.push({id:uidP, nombres:NOM_PROFES[i], apellidos:APE_PROFES[i], email:'profe'+(i+1)+'@rewa.ec', rol:'profesor', activo:true});
+    db.profesores.push({id:'prof'+(i+1), usuario_id:uidP, nombres:NOM_PROFES[i], apellidos:APE_PROFES[i], telefono:'09'+(80000000+i*111), activo:true});
+  }
+
+  let pIdx = 0;
+  const nextProf = () => db.profesores[pIdx++ % 15].id;
+  db.ramas.forEach(r=>{
+    db.campus.forEach(c=>{
+      db.profesor_rama.push({id:uid('pr'), profesor_id:nextProf(), rama_id:r.id, campus_id:c.id, tipo:'principal', activo:true});
+      if(c.id==='cam1') db.profesor_rama.push({id:uid('pr'), profesor_id:nextProf(), rama_id:r.id, campus_id:c.id, tipo:'asistente', activo:true});
+    });
+  });
+
+  const horaBase = {Fútbol:'15:00', Básquetbol:'16:30', Vóleybol:'15:00', Natación:'07:00'};
+  db.ramas.forEach(r=>{
+    db.campus.forEach(c=>{
+      const principal = db.profesor_rama.find(pr=>pr.rama_id===r.id && pr.campus_id===c.id && pr.tipo==='principal');
+      ['lunes','miercoles','viernes'].forEach(dia=>{
+        const [hh,mm] = horaBase[r.nombre].split(':').map(Number);
+        const fin = new Date(2000,0,1,hh,mm); fin.setMinutes(fin.getMinutes()+90);
+        db.horarios.push({
+          id:uid('hor'), rama_id:r.id, campus_id:c.id, dia,
+          hora_inicio: horaBase[r.nombre], hora_fin: String(fin.getHours()).padStart(2,'0')+':'+String(fin.getMinutes()).padStart(2,'0'),
+          profesor_id: principal.profesor_id, estado:'activo'
+        });
+      });
+    });
+  });
+
+  const estadosCiclo = ['activo','activo','activo','activo','activo','activo','activo','activo','activo','activo','activo','activo','activo','activo','activo','activo','activo','activo','inactivo','lesionado'];
+  for(let i=0;i<60;i++){
+    const campusId = db.campus[i%3].id;
+    const estId = 'est'+(i+1);
+    const nacim = new Date(2010,0,1); nacim.setDate(nacim.getDate() + ((i*47)%3650));
+    db.estudiantes.push({
+      id: estId,
+      nombres: NOM_EST[i%30],
+      apellidos: APE_EST[i%20] + ' ' + APE_EST[(i+3)%20],
+      fecha_nacimiento: dateOnly(nacim),
+      campus_principal_id: campusId,
+      estado: estadosCiclo[i%20],
+      contacto_telefono: '09'+(70000000+i*137),
+      contacto_email: (NOM_EST[i%30]).toLowerCase()+'.'+(i+1)+'@estudiante.rewa.ec',
+      representante_nombre: 'Representante de '+NOM_EST[i%30],
+      representante_telefono: '09'+(60000000+i*91),
+      representante_email: 'representante'+(i+1)+'@correo.com',
+      curso: (i%4===0) ? ((8+(i%5))+'vo EGB') : null,
+      contacto_emergencia_nombre: null,
+      contacto_emergencia_telefono: null,
+      observaciones_medicas: (i%13===0) ? 'Asma leve - lleva inhalador de rescate.' : null,
+    });
+
+    const nRamas = 1 + (i%2);
+    for(let j=0;j<nRamas;j++){
+      const rama = db.ramas[(i+j)%4];
+      if(!db.estudiante_rama.some(er=>er.estudiante_id===estId && er.rama_id===rama.id)){
+        db.estudiante_rama.push({id:uid('er'), estudiante_id:estId, rama_id:rama.id, campus_id:campusId, fecha_inscripcion: addDays(todayStr(), -((i*3)%180)), estado:'activo'});
+      }
+    }
+  }
+
+  // --- Horarios/sesiones: ventana móvil -14 a +7 días desde hoy, siempre incluye "hoy" (mejora Parte A, punto 5) ---
+  regenerarSesiones(db, -14, 7);
+
+  // --- Asistencia de ejemplo para sesiones pasadas ---
+  const estadosAsistCiclo = ['presente','presente','presente','presente','presente','presente','presente','falta','tarde','justificado'];
+  let kAsist = 0;
+  db.sesiones.filter(s=>s.fecha < todayStr() && s.estado!=='cancelada').forEach(s=>{
+    const hor = db.horarios.find(h=>h.id===s.horario_id);
+    const inscritos = db.estudiante_rama.filter(er=>er.rama_id===hor.rama_id && er.campus_id===hor.campus_id && er.estado==='activo');
+    inscritos.forEach(er=>{
+      kAsist++;
+      db.asistencias.push({id:uid('asi'), sesion_id:s.id, estudiante_id:er.estudiante_id, estado:estadosAsistCiclo[kAsist%10],
+        observacion_individual:null, usuario_registro: db.profesores.find(p=>p.id===hor.profesor_id)?.usuario_id || 'u_admin1',
+        fecha_registro:new Date().toISOString(), corregido:false});
+    });
+    s.estado = 'registro_completado';
+  });
+
+  // dos sesiones canceladas de ejemplo
+  db.sesiones.filter(s=>s.fecha < todayStr()).slice(0,2).forEach(s=>{
+    s.estado='cancelada'; s.motivo_cancelacion='Lluvia intensa - cancha inundada'; s.usuario_cancelacion='u_admin1'; s.fecha_cancelacion=new Date().toISOString();
+  });
+
+  // --- Mensualidades + pagos de ejemplo (periodo actual y anterior) ---
+  const hoy = new Date();
+  const periodos = [
+    {mes: hoy.getMonth()+1, anio: hoy.getFullYear()},
+    {mes: hoy.getMonth()===0?12:hoy.getMonth(), anio: hoy.getMonth()===0?hoy.getFullYear()-1:hoy.getFullYear()},
+  ];
+  let kMens = 0;
+  periodos.forEach(per=>{
+    db.estudiante_rama.filter(er=>er.estado==='activo').forEach(er=>{
+      const est = db.estudiantes.find(e=>e.id===er.estudiante_id);
+      if(!est || est.estado!=='activo') return;
+      const rama = db.ramas.find(r=>r.id===er.rama_id);
+      kMens++;
+      const mId = uid('mens');
+      const fechaLimite = dateOnly(new Date(per.anio, per.mes, 5)); // dia 5 del mes siguiente
+      db.mensualidades.push({
+        id:mId, estudiante_id:er.estudiante_id, rama_id:er.rama_id, periodo_mes:per.mes, periodo_anio:per.anio,
+        monto_base: rama.monto_mensual_base, total_descuentos:0, total_becas:0, total_exoneraciones:0,
+        total_a_pagar: rama.monto_mensual_base, total_pagado:0, saldo: rama.monto_mensual_base,
+        estado:'pendiente', fecha_limite: fechaLimite, observacion:null, creado_por:'u_admin1', fecha_creacion:new Date().toISOString()
+      });
+
+      if(kMens % 5 === 0) db.ajustes.push({id:uid('aj'), mensualidad_id:mId, tipo:'beca', valor_tipo:'porcentaje', valor:20, motivo:'Beca deportiva por desempeño', usuario_id:'u_gerente', fecha:new Date().toISOString(), estado:'activo'});
+      else if(kMens % 7 === 0) db.ajustes.push({id:uid('aj'), mensualidad_id:mId, tipo:'descuento', valor_tipo:'monto', valor:5, motivo:'Descuento por hermano inscrito', usuario_id:'u_gerente', fecha:new Date().toISOString(), estado:'activo'});
+      else if(kMens % 11 === 0) db.ajustes.push({id:uid('aj'), mensualidad_id:mId, tipo:'exoneracion', valor_tipo:'porcentaje', valor:100, motivo:'Exoneración total - caso socioeconómico', usuario_id:'u_admin1', fecha:new Date().toISOString(), estado:'activo'});
+
+      recalcularMensualidad(db, mId);
+
+      const m = db.mensualidades.find(x=>x.id===mId);
+      if(m.saldo > 0 && kMens % 3 === 0){
+        db.pagos.push({id:uid('pago'), mensualidad_id:mId, monto:m.saldo, fecha_pago:addDays(todayStr(),-(kMens%15)), metodo_pago:'efectivo', referencia:'REC-'+kMens, observacion:null, estado:'activo', usuario_registro:'u_gerente', fecha_registro:new Date().toISOString()});
+        recalcularMensualidad(db, mId);
+      } else if(m.saldo > 0 && kMens % 4 === 0){
+        db.pagos.push({id:uid('pago'), mensualidad_id:mId, monto:round2(m.saldo/2), fecha_pago:addDays(todayStr(),-(kMens%10)), metodo_pago:'transferencia', referencia:'TRX-'+kMens, observacion:null, estado:'activo', usuario_registro:'u_gerente', fecha_registro:new Date().toISOString()});
+        recalcularMensualidad(db, mId);
+      }
+    });
+  });
+
+  db.auditoria.push({id:uid('aud'), tabla:'sistema', registro_id:'-', accion:'seed', detalle:'Datos de demostración generados', usuario:'sistema', fecha:new Date().toISOString()});
+
+  return db;
+}
+
+/* =========================================================================
+   GENERACIÓN DE SESIONES DESDE HORARIOS (SES-01), ventana móvil
+   ========================================================================= */
+function regenerarSesiones(db, desdeOffset, hastaOffset){
+  const desde = addDays(todayStr(), desdeOffset);
+  const hasta = addDays(todayStr(), hastaOffset);
+  let f = desde;
+  while(f <= hasta){
+    const diaSemana = DIAS[new Date(f+'T00:00:00').getDay()];
+    db.horarios.filter(hh=>hh.estado==='activo' && hh.dia===diaSemana).forEach(hor=>{
+      const existe = db.sesiones.some(s=>s.horario_id===hor.id && s.fecha===f);
+      if(!existe){
+        db.sesiones.push({
+          id: uid('ses'), horario_id: hor.id, fecha:f, hora_inicio:hor.hora_inicio, hora_fin:hor.hora_fin,
+          estado: f < todayStr() ? 'sin_registro' : 'programada',
+          observacion_general:null, motivo_cancelacion:null, usuario_cancelacion:null, fecha_cancelacion:null
+        });
+      }
+    });
+    f = addDays(f, 1);
+  }
+}
+
+/* =========================================================================
+   REGLAS DE NEGOCIO: MENSUALIDADES (espejo de los triggers de schema.sql)
+   ========================================================================= */
+function recalcularMensualidad(db, mensualidadId){
+  const m = db.mensualidades.find(x=>x.id===mensualidadId);
+  if(!m || m.estado==='anulado') return;
+
+  const ajustesActivos = db.ajustes.filter(a=>a.mensualidad_id===mensualidadId && a.estado==='activo');
+  const sumaTipo = (tipo) => ajustesActivos.filter(a=>a.tipo===tipo)
+    .reduce((acc,a)=> acc + (a.valor_tipo==='monto' ? a.valor : round2(m.monto_base * a.valor / 100)), 0);
+
+  const desc = round2(sumaTipo('descuento'));
+  const beca = round2(sumaTipo('beca'));
+  const exo = round2(sumaTipo('exoneracion'));
+  const exoTotal = ajustesActivos.some(a=>a.tipo==='exoneracion' && a.valor_tipo==='porcentaje' && a.valor>=100);
+
+  let totalAPagar = Math.max(round2(m.monto_base - desc - beca - exo), 0);
+  const pagosActivos = db.pagos.filter(p=>p.mensualidad_id===mensualidadId && p.estado==='activo');
+  const totalPagado = round2(pagosActivos.reduce((acc,p)=>acc+p.monto,0));
+
+  let saldo, estado;
+  if(exoTotal || totalAPagar===0){
+    totalAPagar = 0; saldo = 0; estado = 'exonerado';
+  } else {
+    saldo = Math.max(round2(totalAPagar - totalPagado), 0);
+    estado = saldo===0 ? 'pagado' : (totalPagado>0 ? 'parcial' : 'pendiente');
+  }
+
+  m.total_descuentos=desc; m.total_becas=beca; m.total_exoneraciones=exo;
+  m.total_a_pagar=totalAPagar; m.total_pagado=totalPagado; m.saldo=saldo; m.estado=estado;
+}
+
+function estadoEfectivo(m){
+  if(['pagado','exonerado','anulado'].includes(m.estado)) return m.estado;
+  if(m.saldo > 0 && m.fecha_limite < todayStr()) return 'vencido';
+  return m.estado;
+}
+
+/* =========================================================================
+   PERSISTENCIA Y SESIÓN
+   ========================================================================= */
+const STORAGE_KEY = 'rewa_demo_db_v1';
+const SESSION_KEY = 'rewa_demo_session_v1';
+let db = null;
+let sesion = null; // { usuarioId }
+
+function cargarDB(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){
+    try { db = JSON.parse(raw); return; } catch(e) { /* semilla de nuevo si esta corrupto */ }
+  }
+  db = generarSeed();
+  guardarDB();
+}
+function guardarDB(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+
+function reiniciarDemo(){
+  if(!confirm('Esto borra todos los cambios hechos durante la demostración y regenera los datos de ejemplo. ¿Continuar?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  sessionStorage.removeItem(SESSION_KEY);
+  sesion = null;
+  cargarDB();
+  location.hash = '#/login';
+  render();
+}
+
+function usuarioActual(){ return sesion ? db.usuarios.find(u=>u.id===sesion.usuarioId) : null; }
+function nombreCompleto(u){ return u ? (u.nombres+' '+u.apellidos) : ''; }
+function iniciarSesion(usuarioId){
+  sesion = { usuarioId };
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(sesion));
+  location.hash = '#/inicio';
+  render();
+}
+function cerrarSesion(){
+  sesion = null;
+  sessionStorage.removeItem(SESSION_KEY);
+  location.hash = '#/login';
+  render();
+}
+
+function auditar(tabla, registroId, accion, detalle){
+  const u = usuarioActual();
+  db.auditoria.unshift({ id: uid('aud'), tabla, registro_id: registroId, accion, detalle,
+    usuario: u ? nombreCompleto(u) : 'sistema', fecha: new Date().toISOString() });
+}
+
+/* ---------- Permisos por rol (sección 2 del master prompt) ---------- */
+const puedeGestionarPagos = (rol) => rol==='administrador' || rol==='gerente';
+const puedeVerPagos = (rol) => rol!=='profesor';
+const puedeGestionarCatalogos = (rol) => rol==='administrador';
+const puedeJustificar = (rol) => rol==='administrador' || rol==='gerente' || rol==='profesor';
+const esGestion = (rol) => rol==='administrador' || rol==='gerente';
+
+/* =========================================================================
+   ENRUTADOR Y LAYOUT
+   ========================================================================= */
+const NAV = [
+  {href:'#/inicio', label:'Inicio', roles:['administrador','gerente','profesor']},
+  {href:'#/asistencia', label:'Asistencia', roles:['administrador','gerente','profesor']},
+  {href:'#/estudiantes', label:'Estudiantes', roles:['administrador','gerente']},
+  {href:'#/profesores', label:'Profesores', roles:['administrador','gerente']},
+  {href:'#/ramas', label:'Ramas y costos', roles:['administrador','gerente']},
+  {href:'#/mis-asignaciones', label:'Mis asignaciones', roles:['profesor']},
+  {href:'#/pagos', label:'Pagos', roles:['administrador','gerente']},
+  {href:'#/justificaciones', label:'Justificaciones', roles:['administrador','gerente','profesor']},
+  {href:'#/reportes', label:'Reportes', roles:['administrador','gerente']},
+  {href:'#/auditoria', label:'Auditoría', roles:['administrador']},
+];
+
+function render(){
+  const root = document.getElementById('root');
+  if(!sesion){ root.innerHTML = vistaLogin(); return; }
+  const usuario = usuarioActual();
+  if(!usuario){ cerrarSesion(); return; }
+
+  const hash = (location.hash || '#/inicio').replace(/^#\//,'');
+  const partes = hash.split('/');
+  const ruta = partes[0] || 'inicio';
+  const param = partes[1];
+
+  let contenido = '';
+  try {
+    switch(ruta){
+      case 'inicio': contenido = vistaInicio(usuario); break;
+      case 'asistencia': contenido = param ? vistaAsistenciaDetalle(usuario, param) : vistaAsistenciaLista(usuario); break;
+      case 'estudiantes':
+        if(!esGestion(usuario.rol)) { contenido = vistaSinPermiso(); break; }
+        contenido = param==='nuevo' ? vistaEstudianteNuevo(usuario) : (param==='importar' ? vistaImportacion(usuario) : (param ? vistaEstudianteDetalle(usuario, param) : vistaEstudiantes(usuario)));
+        break;
+      case 'profesores':
+        if(!esGestion(usuario.rol)) { contenido = vistaSinPermiso(); break; }
+        contenido = param==='nuevo' ? vistaProfesorNuevo(usuario) : (param ? vistaProfesorDetalle(usuario, param) : vistaProfesores(usuario));
+        break;
+      case 'ramas':
+        if(!esGestion(usuario.rol)) { contenido = vistaSinPermiso(); break; }
+        contenido = vistaRamas(usuario);
+        break;
+      case 'mis-asignaciones':
+        if(usuario.rol!=='profesor') { contenido = vistaSinPermiso(); break; }
+        contenido = vistaMisAsignaciones(usuario);
+        break;
+      case 'pagos':
+        if(!puedeVerPagos(usuario.rol)) { contenido = vistaSinPermiso(); break; }
+        contenido = param ? vistaPagoDetalle(usuario, param) : vistaPagos(usuario);
+        break;
+      case 'justificaciones': contenido = vistaJustificaciones(usuario); break;
+      case 'reportes':
+        if(!esGestion(usuario.rol)) { contenido = vistaSinPermiso(); break; }
+        contenido = vistaReportes(usuario);
+        break;
+      case 'auditoria':
+        if(usuario.rol!=='administrador') { contenido = vistaSinPermiso(); break; }
+        contenido = vistaAuditoria(usuario);
+        break;
+      default: contenido = vistaInicio(usuario);
+    }
+  } catch(err){
+    console.error(err);
+    contenido = '<div class="card"><p style="color:var(--rojo)">Ocurrió un error al mostrar esta vista: '+esc(err.message)+'</p></div>';
+  }
+
+  root.innerHTML = layout(contenido, usuario, ruta);
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('overlay');
+  if(sb) sb.classList.remove('open');
+  if(ov) ov.classList.add('hidden');
+}
+window.addEventListener('hashchange', render);
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('hidden');
+}
+window.toggleSidebar = toggleSidebar; // usado desde atributos onclick inline (ejecutan en el ámbito global)
+
+function mostrarModal(innerHtml){
+  cerrarModal();
+  const wrap = document.createElement('div');
+  wrap.className = 'modal-bg';
+  wrap.id = 'modalBg';
+  wrap.innerHTML = '<div class="modal">'+innerHtml+'</div>';
+  wrap.addEventListener('click', (e)=>{ if(e.target.id==='modalBg') cerrarModal(); });
+  document.body.appendChild(wrap);
+  const primerCampo = wrap.querySelector('input,textarea,select');
+  if(primerCampo) primerCampo.focus();
+}
+function cerrarModal(){ const el = document.getElementById('modalBg'); if(el) el.remove(); }
+window.cerrarModal = cerrarModal;
+
+function layout(contenidoHtml, usuario, rutaActiva){
+  const items = NAV.filter(i=>i.roles.includes(usuario.rol));
+  return h`
+    <div class="demo-banner">MODO DEMOSTRACIÓN — datos ficticios, no se realizan cobros reales. Los cambios se guardan solo en este navegador.</div>
+    <div class="app-shell">
+      <div id="overlay" class="overlay hidden" onclick="toggleSidebar()"></div>
+      <aside id="sidebar" class="sidebar">
+        <div class="brand"><b>Club Deportivo</b><span>REWA</span></div>
+        <nav>
+          ${items.map(i=>h`<a href="${i.href}" class="${rutaActiva===i.href.replace('#/','') ? 'active':''}">${i.label}</a>`).join('')}
+        </nav>
+        <div class="user">
+          <div class="name">${esc(nombreCompleto(usuario))}</div>
+          <div class="role">${esc(usuario.rol)}</div>
+          <button class="btn btn-outline btn-sm btn-block" onclick="app.cerrarSesion()">Cerrar sesión</button>
+          ${usuario.rol==='administrador' ? '<button class="btn btn-link btn-sm" style="margin-top:8px" onclick="app.reiniciarDemo()">Reiniciar datos de demo</button>' : ''}
+        </div>
+      </aside>
+      <div style="flex:1;min-width:0">
+        <div class="topbar">
+          <button onclick="toggleSidebar()">☰</button>
+          <b>REWA</b>
+        </div>
+        <main class="main">${contenidoHtml}</main>
+      </div>
+    </div>
+  `;
+}
+
+function vistaSinPermiso(){
+  return '<div class="card"><h2>Sin permiso</h2><p class="muted">Tu rol no tiene acceso a este módulo.</p></div>';
+}
+
+/* =========================================================================
+   VISTA: LOGIN
+   ========================================================================= */
+function vistaLogin(){
+  const admin = db.usuarios.find(u=>u.id==='u_admin1');
+  const gerente = db.usuarios.find(u=>u.id==='u_gerente');
+  const profe = db.usuarios.find(u=>u.id==='u_prof1');
+  const otros = db.usuarios.filter(u=>!['u_admin1','u_gerente','u_prof1'].includes(u.id));
+
+  return h`
+    <div class="login-wrap">
+      <div class="login-card">
+        <div class="login-logo">
+          <div class="badge">R</div>
+          <h1>Club Deportivo REWA</h1>
+          <p>Asistencia y pagos mensuales — ISM Quito</p>
+        </div>
+
+        <form onsubmit="return app.manejarLoginManual(event)">
+          <div class="field"><label>Correo</label><input id="loginEmail" type="email" placeholder="usuario@rewa.ec" required></div>
+          <div class="field"><label>Contraseña</label><input id="loginPass" type="password" placeholder="••••••••" required></div>
+          <button class="btn btn-primary btn-block" type="submit">Ingresar</button>
+        </form>
+
+        <div class="demo-users">
+          <p>Acceso rápido de demostración (3 roles):</p>
+          <button class="demo-user-btn" onclick="app.iniciarSesion('${admin.id}')">
+            <span>👤 ${esc(nombreCompleto(admin))}</span><small>Administrador</small>
+          </button>
+          <button class="demo-user-btn" onclick="app.iniciarSesion('${gerente.id}')">
+            <span>👤 ${esc(nombreCompleto(gerente))}</span><small>Gerente</small>
+          </button>
+          <button class="demo-user-btn" onclick="app.iniciarSesion('${profe.id}')">
+            <span>👤 ${esc(nombreCompleto(profe))}</span><small>Profesor</small>
+          </button>
+          <details style="margin-top:8px">
+            <summary style="cursor:pointer;font-size:12.5px;color:var(--gris)">Ver otros usuarios de prueba (14 profesores más)</summary>
+            <div style="max-height:160px;overflow-y:auto;margin-top:8px">
+              ${otros.map(u=>h`<button class="demo-user-btn" onclick="app.iniciarSesion('${u.id}')"><span>${esc(nombreCompleto(u))}</span><small>${esc(u.rol)}</small></button>`).join('')}
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================================
+   VISTA: INICIO (KPIs — REP-01)
+   ========================================================================= */
+function vistaInicio(usuario){
+  regenerarSesiones(db, -14, 7); guardarDB(); // asegura que "hoy" siempre tenga sesiones (SES-01)
+
+  const hoy = todayStr();
+  const estudiantesActivos = db.estudiantes.filter(e=>e.estado==='activo').length;
+  const profesoresActivos = db.profesores.filter(p=>p.activo).length;
+  const sesionesHoy = db.sesiones.filter(s=>s.fecha===hoy && s.estado!=='cancelada').length;
+  const sesionesSinRegistro = db.sesiones.filter(s=>s.fecha===hoy && ['programada','sin_registro'].includes(s.estado)).length;
+
+  const ahora = new Date();
+  const mensualidadesMes = db.mensualidades.filter(m=>m.periodo_mes===ahora.getMonth()+1 && m.periodo_anio===ahora.getFullYear());
+  const pendientes = db.mensualidades.filter(m=>['pendiente','parcial'].includes(estadoEfectivo(m))).reduce((a,m)=>a+m.saldo,0);
+  const vencidos = db.mensualidades.filter(m=>estadoEfectivo(m)==='vencido').reduce((a,m)=>a+m.saldo,0);
+  const recaudacionMes = round2(mensualidadesMes.reduce((a,m)=>a+m.total_pagado,0));
+
+  return h`
+    <div class="page-head">
+      <div><h1>Hola, ${esc(usuario.nombres)}</h1><div class="sub">${new Intl.DateTimeFormat('es-EC',{dateStyle:'full'}).format(new Date())}</div></div>
+    </div>
+    <div class="grid grid-kpi">
+      <div class="kpi"><div class="t">Estudiantes activos</div><div class="v">${estudiantesActivos}</div></div>
+      <div class="kpi"><div class="t">Profesores activos</div><div class="v">${profesoresActivos}</div></div>
+      <div class="kpi"><div class="t">Sesiones hoy</div><div class="v">${sesionesHoy}</div></div>
+      <div class="kpi"><div class="t">Sesiones sin registro</div><div class="v" style="color:var(--ambar)">${sesionesSinRegistro}</div></div>
+      ${esGestion(usuario.rol) ? h`
+        <div class="kpi"><div class="t">Pagos pendientes</div><div class="v" style="color:var(--ambar)">${fmtMoney(pendientes)}</div></div>
+        <div class="kpi"><div class="t">Pagos vencidos</div><div class="v" style="color:var(--rojo)">${fmtMoney(vencidos)}</div></div>
+        <div class="kpi"><div class="t">Recaudación del mes</div><div class="v" style="color:var(--verde)">${fmtMoney(recaudacionMes)}</div></div>
+      ` : ''}
+    </div>
+    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn btn-primary" href="#/asistencia">Ir a asistencia de hoy</a>
+      ${esGestion(usuario.rol) ? '<a class="btn btn-outline" href="#/pagos">Ir a pagos</a>' : ''}
+    </div>
+  `;
+}
+
+/* =========================================================================
+   VISTA: ASISTENCIA
+   ========================================================================= */
+let asistenciaFecha = todayStr();
+
+function profesorPropio(usuario){ return db.profesores.find(p=>p.usuario_id===usuario.id); }
+
+function sesionesVisibles(usuario, fecha){
+  regenerarSesiones(db, -14, 7);
+  let sesiones = db.sesiones.filter(s=>s.fecha===fecha);
+  if(usuario.rol==='profesor'){
+    const prof = profesorPropio(usuario);
+    // un profesor desactivado (PRO-03) pierde de inmediato todas sus asignaciones visibles
+    const misRamaCampus = (prof && prof.activo)
+      ? db.profesor_rama.filter(pr=>pr.profesor_id===prof.id && pr.activo).map(pr=>pr.rama_id+'|'+pr.campus_id)
+      : [];
+    sesiones = sesiones.filter(s=>{
+      const hor = db.horarios.find(h=>h.id===s.horario_id);
+      return misRamaCampus.includes(hor.rama_id+'|'+hor.campus_id);
+    });
+  }
+  return sesiones.sort((a,b)=>a.hora_inicio.localeCompare(b.hora_inicio));
+}
+
+function renderSessionItem(usuario, s){
+  const hor = db.horarios.find(h=>h.id===s.horario_id);
+  const rama = db.ramas.find(r=>r.id===hor.rama_id);
+  const etq = ETQ_SESION[s.estado];
+  const puedeRegistrar = usuario.rol!=='gerente' && s.estado!=='cancelada';
+  return h`
+    <div class="session-item">
+      <div>
+        <div class="r">${esc(rama.nombre)}</div>
+        <div class="c">${s.hora_inicio.slice(0,5)} - ${s.hora_fin.slice(0,5)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="badge ${etq.cls}">${etq.t}</span>
+        ${puedeRegistrar ? `<a class="btn-link" href="#/asistencia/${s.id}">Pasar lista →</a>` : (s.estado!=='cancelada' ? `<a class="btn-link" href="#/asistencia/${s.id}">Ver →</a>` : '')}
+      </div>
+    </div>
+  `;
+}
+
+function vistaAsistenciaLista(usuario){
+  const sesiones = sesionesVisibles(usuario, asistenciaFecha);
+  guardarDB();
+
+  // Agrupadas por campus y, dentro de cada campus, por hora/rama.
+  const porCampus = {};
+  sesiones.forEach(s=>{
+    const hor = db.horarios.find(h=>h.id===s.horario_id);
+    (porCampus[hor.campus_id] = porCampus[hor.campus_id] || []).push(s);
+  });
+  const campusIds = Object.keys(porCampus).sort((a,b)=>{
+    const ca = db.campus.find(c=>c.id===a)?.nombre || '';
+    const cb = db.campus.find(c=>c.id===b)?.nombre || '';
+    return ca.localeCompare(cb);
+  });
+
+  return h`
+    <div class="page-head">
+      <div><h1>Sesiones del día</h1><div class="sub">${fmtDate(asistenciaFecha)}</div></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="date" value="${asistenciaFecha}" onchange="app.cambiarFechaAsistencia(this.value)">
+      </div>
+    </div>
+    ${campusIds.map(campusId=>{
+      const campus = db.campus.find(c=>c.id===campusId);
+      const lista = porCampus[campusId].sort((a,b)=>a.hora_inicio.localeCompare(b.hora_inicio));
+      return h`
+        <div style="margin-bottom:22px">
+          <h2 style="font-size:15px;color:var(--azul);margin-bottom:10px">${esc(campus.nombre)}</h2>
+          <div>${lista.map(s=>renderSessionItem(usuario, s)).join('')}</div>
+        </div>
+      `;
+    }).join('') || '<div class="empty">No hay sesiones para esta fecha.</div>'}
+  `;
+}
+
+function vistaAsistenciaDetalle(usuario, sesionId){
+  const s = db.sesiones.find(x=>x.id===sesionId);
+  if(!s) return '<div class="empty">Sesión no encontrada.</div>';
+  const hor = db.horarios.find(h=>h.id===s.horario_id);
+  const rama = db.ramas.find(r=>r.id===hor.rama_id);
+  const campus = db.campus.find(c=>c.id===hor.campus_id);
+
+  const inscritos = db.estudiante_rama.filter(er=>er.rama_id===hor.rama_id && er.campus_id===hor.campus_id && er.estado==='activo')
+    .map(er=>db.estudiantes.find(e=>e.id===er.estudiante_id)).filter(Boolean)
+    .sort((a,b)=>a.apellidos.localeCompare(b.apellidos));
+
+  const soloLectura = usuario.rol==='gerente' || s.estado==='cancelada';
+
+  if(!window.__paseLista || window.__paseListaSesion !== sesionId){
+    window.__paseListaSesion = sesionId;
+    window.__paseLista = {};
+    inscritos.forEach(e=>{
+      const existente = db.asistencias.find(a=>a.sesion_id===sesionId && a.estudiante_id===e.id);
+      window.__paseLista[e.id] = existente ? existente.estado : 'presente';
+    });
+  }
+
+  const busqueda = (window.__paseListaBusqueda || '').toLowerCase();
+  const filtrados = busqueda ? inscritos.filter(e=>(e.nombres+' '+e.apellidos).toLowerCase().includes(busqueda)) : inscritos;
+  const estados = ['presente','falta','tarde','justificado','permiso','lesionado'];
+
+  return h`
+    <a class="link-back" href="#/asistencia">← Volver a sesiones</a>
+    <div class="page-head"><div><h1>${esc(rama.nombre)}</h1><div class="sub">${esc(campus.nombre)} · ${s.hora_inicio.slice(0,5)} - ${s.hora_fin.slice(0,5)} · ${fmtDate(s.fecha)}</div></div></div>
+
+    ${s.estado==='cancelada' ? h`<div class="card" style="border-color:var(--rojo);margin-bottom:14px"><b style="color:var(--rojo)">Sesión cancelada.</b> Motivo: ${esc(s.motivo_cancelacion||'')}</div>` : ''}
+
+    ${!soloLectura ? h`
+      <div class="toolbar">
+        <input type="text" placeholder="Buscar estudiante..." style="flex:1;min-width:180px" oninput="app.filtrarPaseLista(this.value)">
+        <button class="btn" style="background:var(--verde-bg);color:var(--verde)" onclick="app.marcarTodosPresentes('${sesionId}')">Marcar todos presentes</button>
+      </div>
+    ` : ''}
+
+    <div>
+      ${filtrados.map(e=>{
+        const actual = window.__paseLista[e.id] || 'presente';
+        return h`
+          <div class="attn-card">
+            <div class="nm">${esc(e.apellidos)} ${esc(e.nombres)}</div>
+            <div class="state-btns">
+              ${estados.map(st=>h`<button class="state-btn ${actual===st?'sel-'+st:''}" ${soloLectura?'disabled':''} onclick="app.marcarEstado('${e.id}','${st}')">${ETQ_ASISTENCIA[st].t}</button>`).join('')}
+            </div>
+          </div>
+        `;
+      }).join('') || '<div class="empty">Sin estudiantes inscritos en esta rama/campus.</div>'}
+    </div>
+
+    ${!soloLectura ? h`
+      <div class="field" style="margin-top:16px">
+        <label>Observación general (opcional)</label>
+        <textarea id="obsGeneral" rows="2">${esc(s.observacion_general||'')}</textarea>
+      </div>
+      <div class="save-bar">
+        <button class="btn btn-primary btn-block" onclick="app.guardarAsistencia('${sesionId}')">Guardar asistencia</button>
+      </div>
+    ` : ''}
+  `;
+}
+
+/* =========================================================================
+   VISTA: ESTUDIANTES
+   ========================================================================= */
+let estudiantesBusqueda = '';
+
+function vistaEstudiantes(usuario){
+  const q = estudiantesBusqueda.toLowerCase();
+  const lista = db.estudiantes.filter(e=> !q || (e.nombres+' '+e.apellidos).toLowerCase().includes(q))
+    .sort((a,b)=>a.apellidos.localeCompare(b.apellidos));
+
+  return h`
+    <div class="page-head">
+      <div><h1>Estudiantes</h1><div class="sub">${lista.length} de ${db.estudiantes.length}</div></div>
+      ${usuario.rol==='administrador' ? h`
+        <div style="display:flex;gap:8px">
+          <a class="btn btn-outline" href="#/estudiantes/importar">Importar Excel/CSV</a>
+          <a class="btn btn-primary" href="#/estudiantes/nuevo">+ Nuevo estudiante</a>
+        </div>
+      ` : ''}
+    </div>
+    <div class="toolbar"><input type="text" placeholder="Buscar por nombre o apellido..." value="${esc(estudiantesBusqueda)}" oninput="app.buscarEstudiantes(this.value)" style="min-width:260px"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nombre</th><th>Campus</th><th>Nacimiento</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+          ${lista.map(e=>{
+            const campus = db.campus.find(c=>c.id===e.campus_principal_id);
+            return h`<tr>
+              <td>${esc(e.apellidos)} ${esc(e.nombres)}</td>
+              <td>${esc(campus?.nombre||'')}</td>
+              <td>${fmtDate(e.fecha_nacimiento)}</td>
+              <td><span class="badge ${ETQ_ESTUDIANTE[e.estado]}">${e.estado}</span></td>
+              <td style="text-align:right"><a class="btn-link" href="#/estudiantes/${e.id}">Ver →</a></td>
+            </tr>`;
+          }).join('') || '<tr><td colspan="5" class="empty">Sin resultados.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function vistaEstudianteDetalle(usuario, estudianteId){
+  const e = db.estudiantes.find(x=>x.id===estudianteId);
+  if(!e) return '<div class="empty">Estudiante no encontrado.</div>';
+  const campus = db.campus.find(c=>c.id===e.campus_principal_id);
+  const ramas = db.estudiante_rama.filter(er=>er.estudiante_id===estudianteId).map(er=>db.ramas.find(r=>r.id===er.rama_id));
+  const asistencias = db.asistencias.filter(a=>a.estudiante_id===estudianteId);
+  const resumenAsist = {};
+  asistencias.forEach(a=>{ resumenAsist[a.estado]=(resumenAsist[a.estado]||0)+1; });
+  const justif = db.justificaciones.filter(j=>j.estudiante_id===estudianteId);
+  const mensualidades = db.mensualidades.filter(m=>m.estudiante_id===estudianteId).sort((a,b)=> b.periodo_anio-a.periodo_anio || b.periodo_mes-a.periodo_mes);
+
+  return h`
+    <a class="link-back" href="#/estudiantes">← Volver a estudiantes</a>
+    <div class="page-head"><div><h1>${esc(e.apellidos)} ${esc(e.nombres)}</h1><div class="sub">${esc(campus?.nombre||'')} · Nacimiento: ${fmtDate(e.fecha_nacimiento)}</div></div>
+      <span class="badge ${ETQ_ESTUDIANTE[e.estado]}">${e.estado}</span>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="section-title">Datos generales</div>
+        <dl class="breakdown">
+          <dt>Ramas</dt><dd>${ramas.map(r=>esc(r?.nombre)).join(', ') || '—'}</dd>
+          <dt>Representante</dt><dd>${esc(e.representante_nombre)}</dd>
+          <dt>Teléfono representante</dt><dd>${esc(e.representante_telefono)}</dd>
+          <dt>Curso</dt><dd>${esc(e.curso||'—')}</dd>
+          ${esGestion(usuario.rol) ? h`<dt>Observaciones médicas</dt><dd>${esc(e.observaciones_medicas||'—')}</dd>` : ''}
+        </dl>
+      </div>
+      <div class="card">
+        <div class="section-title">Resumen de asistencia (histórico)</div>
+        <dl class="breakdown">
+          ${Object.keys(ETQ_ASISTENCIA).map(k=>h`<dt>${ETQ_ASISTENCIA[k].t}</dt><dd>${resumenAsist[k]||0}</dd>`).join('')}
+        </dl>
+      </div>
+    </div>
+
+    ${esGestion(usuario.rol) ? h`
+      <div class="card" style="margin-top:14px">
+        <div class="section-title">Historial de mensualidades</div>
+        <table>
+          <thead><tr><th>Periodo</th><th>Rama</th><th>Total</th><th>Saldo</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            ${mensualidades.map(m=>{
+              const rama = db.ramas.find(r=>r.id===m.rama_id);
+              const etq = ETQ_MENSUALIDAD[estadoEfectivo(m)];
+              return h`<tr><td>${MESES[m.periodo_mes-1]} ${m.periodo_anio}</td><td>${esc(rama?.nombre)}</td><td>${fmtMoney(m.total_a_pagar)}</td><td>${fmtMoney(m.saldo)}</td><td><span class="badge ${etq.cls}">${etq.t}</span></td><td style="text-align:right"><a class="btn-link" href="#/pagos/${m.id}">Ver →</a></td></tr>`;
+            }).join('') || '<tr><td colspan="6" class="empty">Sin mensualidades registradas.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    ` : ''}
+
+    <div class="card" style="margin-top:14px">
+      <div class="section-title">Justificaciones</div>
+      <table>
+        <thead><tr><th>Fecha</th><th>Rama</th><th>Tipo</th><th>Motivo</th></tr></thead>
+        <tbody>
+          ${justif.map(j=>h`<tr><td>${fmtDate(j.fecha)}</td><td>${esc(db.ramas.find(r=>r.id===j.rama_id)?.nombre)}</td><td style="text-transform:capitalize">${j.tipo}</td><td>${esc(j.motivo)}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">Sin justificaciones.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function vistaEstudianteNuevo(usuario){
+  if(usuario.rol!=='administrador') return vistaSinPermiso();
+  return h`
+    <a class="link-back" href="#/estudiantes">← Volver a estudiantes</a>
+    <div class="page-head"><h1>Nuevo estudiante</h1></div>
+    <form class="card" onsubmit="return app.crearEstudiante(event)">
+      <div class="two-col">
+        <div class="field"><label>Nombres</label><input name="nombres" required></div>
+        <div class="field"><label>Apellidos</label><input name="apellidos" required></div>
+        <div class="field"><label>Fecha de nacimiento</label><input name="fecha_nacimiento" type="date" required></div>
+        <div class="field"><label>Campus principal</label><select name="campus_principal_id" required>${db.campus.map(c=>`<option value="${c.id}">${esc(c.nombre)}</option>`).join('')}</select></div>
+        <div class="field"><label>Rama (inscripción inicial)</label><select name="rama_id"><option value="">— Ninguna por ahora —</option>${db.ramas.map(r=>`<option value="${r.id}">${esc(r.nombre)}</option>`).join('')}</select></div>
+        <div class="field"><label>Curso (opcional)</label><input name="curso"></div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0 16px">
+      <div class="two-col">
+        <div class="field"><label>Representante</label><input name="representante_nombre" required></div>
+        <div class="field"><label>Teléfono representante</label><input name="representante_telefono" required></div>
+      </div>
+      <div class="field"><label>Observaciones médicas (opcional)</label><textarea name="observaciones_medicas" rows="2"></textarea><p class="muted">Visible solo para Administrador y Gerente.</p></div>
+      <button type="submit" class="btn btn-primary">Registrar estudiante</button>
+    </form>
+  `;
+}
+
+/* =========================================================================
+   VISTA: IMPORTACIÓN MASIVA (EST-06 a EST-12)
+   ========================================================================= */
+let importacionFilas = null; // preview tras parsear el CSV
+
+function plantillaCsv(){
+  return 'nombres,apellidos,fecha_nacimiento,campus,representante_nombre,representante_telefono,curso\n' +
+    'Juan,Pérez Ríos,2012-05-14,ISM North,María Ríos,0991234567,7mo EGB\n';
+}
+
+function parsearCsv(texto){
+  const lineas = texto.split(/\r?\n/).filter(l=>l.trim().length>0);
+  if(lineas.length===0) return [];
+  const encabezados = lineas[0].split(',').map(s=>s.trim());
+  return lineas.slice(1).map(linea=>{
+    const valores = linea.split(',').map(s=>s.trim());
+    const fila = {};
+    encabezados.forEach((enc,i)=> fila[enc]=valores[i]||'');
+    return fila;
+  });
+}
+
+function validarFilaImportacion(fila){
+  const errores = [];
+  if(!fila.nombres) errores.push('nombres es obligatorio');
+  if(!fila.apellidos) errores.push('apellidos es obligatorio');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(fila.fecha_nacimiento||'')) errores.push('fecha_nacimiento debe ser AAAA-MM-DD');
+  const campus = db.campus.find(c=>c.nombre.toLowerCase()===String(fila.campus||'').toLowerCase());
+  if(!campus) errores.push('campus "'+fila.campus+'" no existe');
+  if(!fila.representante_nombre) errores.push('representante_nombre es obligatorio');
+  if(!fila.representante_telefono) errores.push('representante_telefono es obligatorio');
+
+  const duplicado = errores.length===0 && db.estudiantes.some(e=>
+    e.nombres.toLowerCase()===fila.nombres.toLowerCase() &&
+    e.apellidos.toLowerCase()===fila.apellidos.toLowerCase() &&
+    e.fecha_nacimiento===fila.fecha_nacimiento);
+
+  return { errores, duplicado, campusId: campus?.id };
+}
+
+function vistaImportacion(usuario){
+  if(usuario.rol!=='administrador') return vistaSinPermiso();
+
+  return h`
+    <a class="link-back" href="#/estudiantes">← Volver a estudiantes</a>
+    <div class="page-head"><h1>Importar estudiantes (Excel/CSV)</h1></div>
+
+    <div class="card" style="margin-bottom:14px">
+      <p class="muted">1. Descarga la plantilla, complétala y súbela. 2. Revisa la vista previa (errores y posibles duplicados). 3. Confirma la importación.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-outline" onclick="app.descargarPlantilla()">Descargar plantilla CSV</button>
+        <label class="btn btn-primary" style="display:inline-flex;align-items:center">
+          Elegir archivo CSV
+          <input type="file" accept=".csv" style="display:none" onchange="app.procesarArchivoImportacion(this.files[0])">
+        </label>
+      </div>
+    </div>
+
+    <div id="importPreview">${importacionFilas ? renderPreviewImportacion() : ''}</div>
+  `;
+}
+
+function renderPreviewImportacion(){
+  const validadas = importacionFilas.map(f=>({...f, ...validarFilaImportacion(f)}));
+  const okCount = validadas.filter(v=>v.errores.length===0).length;
+  const errCount = validadas.filter(v=>v.errores.length>0).length;
+  const dupCount = validadas.filter(v=>v.errores.length===0 && v.duplicado).length;
+
+  return h`
+    <div class="card">
+      <div class="section-title">Vista previa: ${validadas.length} filas — ${okCount} válidas, ${dupCount} posibles duplicados, ${errCount} con errores</div>
+      <table>
+        <thead><tr><th>Nombres</th><th>Apellidos</th><th>Nacimiento</th><th>Campus</th><th>Estado</th></tr></thead>
+        <tbody>
+          ${validadas.map(v=>h`
+            <tr class="${v.errores.length>0?'import-row-error':(v.duplicado?'import-row-dup':'')}">
+              <td>${esc(v.nombres)}</td><td>${esc(v.apellidos)}</td><td>${esc(v.fecha_nacimiento)}</td><td>${esc(v.campus)}</td>
+              <td>${v.errores.length>0 ? esc(v.errores.join('; ')) : (v.duplicado ? 'Posible duplicado' : 'OK')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="app.confirmarImportacion()">Confirmar importación (${okCount} filas)</button>
+        <button class="btn btn-outline" onclick="app.cancelarImportacion()">Cancelar</button>
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================================
+   VISTA: PROFESORES Y ASIGNACIONES (RAM-02)
+   Administrador y Gerente asignan rama+campus a un profesor; el profesor ve
+   sus propias asignaciones en "Mis asignaciones". Al quedar asignado a una
+   rama+campus, automáticamente puede ver la lista y pasar asistencia ahí
+   (misma comprobación que ya usa el módulo de Asistencia).
+   ========================================================================= */
+function vistaProfesores(usuario){
+  const lista = [...db.profesores].sort((a,b)=>a.apellidos.localeCompare(b.apellidos));
+
+  return h`
+    <div class="page-head">
+      <div><h1>Profesores</h1><div class="sub">${lista.length} registrados</div></div>
+      <a class="btn btn-primary" href="#/profesores/nuevo">+ Nuevo profesor</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nombre</th><th>Teléfono</th><th>Asignaciones activas</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+          ${lista.map(p=>{
+            const asignaciones = db.profesor_rama.filter(pr=>pr.profesor_id===p.id && pr.activo);
+            return h`<tr style="${p.activo?'':'opacity:.5'}">
+              <td>${esc(p.apellidos)} ${esc(p.nombres)}</td>
+              <td>${esc(p.telefono||'')}</td>
+              <td>${asignaciones.length}</td>
+              <td><span class="badge ${p.activo?'b-verde':'b-gris'}">${p.activo?'Activo':'Inactivo'}</span></td>
+              <td style="text-align:right"><a class="btn-link" href="#/profesores/${p.id}">Gestionar →</a></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function vistaProfesorNuevo(usuario){
+  return h`
+    <a class="link-back" href="#/profesores">← Volver a profesores</a>
+    <div class="page-head"><h1>Nuevo profesor</h1></div>
+    <form class="card" style="max-width:420px" onsubmit="return app.crearProfesor(event)">
+      <div class="field"><label>Nombres</label><input name="nombres" required></div>
+      <div class="field"><label>Apellidos</label><input name="apellidos" required></div>
+      <div class="field"><label>Teléfono (opcional)</label><input name="telefono"></div>
+      <div class="field"><label>Correo (opcional)</label><input name="email" type="email"></div>
+      <p class="muted" style="margin-bottom:14px">Esto crea el registro del profesor. El acceso al sistema (usuario y contraseña) se vincula por separado — ver SETUP.md.</p>
+      <button type="submit" class="btn btn-primary">Registrar profesor</button>
+    </form>
+  `;
+}
+
+function vistaProfesorDetalle(usuario, profesorId){
+  const p = db.profesores.find(x=>x.id===profesorId);
+  if(!p) return '<div class="empty">Profesor no encontrado.</div>';
+  const asignaciones = db.profesor_rama.filter(pr=>pr.profesor_id===profesorId && pr.activo)
+    .sort((a,b)=>{
+      const ca = db.campus.find(c=>c.id===a.campus_id)?.nombre||'';
+      const cb = db.campus.find(c=>c.id===b.campus_id)?.nombre||'';
+      return ca.localeCompare(cb);
+    });
+
+  return h`
+    <a class="link-back" href="#/profesores">← Volver a profesores</a>
+    <div class="page-head">
+      <div><h1>${esc(p.apellidos)} ${esc(p.nombres)}</h1><div class="sub">${esc(p.telefono||'')}</div></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="badge ${p.activo?'b-verde':'b-gris'}">${p.activo?'Activo':'Inactivo'}</span>
+        <button class="btn btn-outline btn-sm" onclick="app.cambiarEstadoProfesor('${p.id}', ${!p.activo})">${p.activo?'Desactivar':'Reactivar'}</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="section-title">Ramas y campus asignados</div>
+      <table>
+        <thead><tr><th>Campus</th><th>Rama</th><th>Tipo</th><th></th></tr></thead>
+        <tbody>
+          ${asignaciones.map(pr=>{
+            const rama = db.ramas.find(r=>r.id===pr.rama_id);
+            const campus = db.campus.find(c=>c.id===pr.campus_id);
+            return h`<tr>
+              <td>${esc(campus?.nombre)}</td><td>${esc(rama?.nombre)}</td>
+              <td style="text-transform:capitalize">${pr.tipo}</td>
+              <td style="text-align:right"><button class="btn-link" style="color:var(--rojo)" onclick="app.quitarAsignacion('${pr.id}','${profesorId}')">Quitar</button></td>
+            </tr>`;
+          }).join('') || '<tr><td colspan="4" class="empty">Sin asignaciones activas.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Nueva asignación</div>
+      <form onsubmit="return app.crearAsignacion(event, '${profesorId}')">
+        <div class="two-col">
+          <div class="field"><label>Campus</label>
+            <select name="campus_id" required>${db.campus.map(c=>`<option value="${c.id}">${esc(c.nombre)}</option>`).join('')}</select>
+          </div>
+          <div class="field"><label>Rama</label>
+            <select name="rama_id" required>${db.ramas.map(r=>`<option value="${r.id}">${esc(r.nombre)}</option>`).join('')}</select>
+          </div>
+          <div class="field"><label>Tipo</label>
+            <select name="tipo">
+              <option value="principal">Principal</option>
+              <option value="asistente">Asistente</option>
+              <option value="suplente">Suplente (rotación)</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Asignar</button>
+      </form>
+    </div>
+  `;
+}
+
+function vistaMisAsignaciones(usuario){
+  const prof = profesorPropio(usuario);
+  const asignaciones = (prof && prof.activo)
+    ? db.profesor_rama.filter(pr=>pr.profesor_id===prof.id && pr.activo)
+    : [];
+
+  const porCampus = {};
+  asignaciones.forEach(pr=>{
+    (porCampus[pr.campus_id] = porCampus[pr.campus_id] || []).push(pr);
+  });
+  const campusIds = Object.keys(porCampus).sort((a,b)=>{
+    const ca = db.campus.find(c=>c.id===a)?.nombre||'';
+    const cb = db.campus.find(c=>c.id===b)?.nombre||'';
+    return ca.localeCompare(cb);
+  });
+
+  return h`
+    <div class="page-head"><div><h1>Mis asignaciones</h1><div class="sub">Los campus y deportes donde puedes pasar asistencia</div></div></div>
+    ${campusIds.length===0 ? '<div class="card"><p class="muted">Todavía no tienes asignaciones. Contacta a Administración o Gerencia.</p></div>' : ''}
+    ${campusIds.map(campusId=>{
+      const campus = db.campus.find(c=>c.id===campusId);
+      return h`
+        <div class="card" style="margin-bottom:12px">
+          <div class="section-title">${esc(campus?.nombre)}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${porCampus[campusId].map(pr=>{
+              const rama = db.ramas.find(r=>r.id===pr.rama_id);
+              return `<span class="chip">${esc(rama?.nombre)} · <span style="text-transform:capitalize">${pr.tipo}</span></span>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+/* =========================================================================
+   VISTA: RAMAS Y COSTOS
+   Administrador y Gerente pueden editar monto_mensual_base (decisión
+   explícita del cliente). El costo nuevo solo aplica a mensualidades que se
+   generen de ahora en adelante; las ya generadas guardan su propio monto_base.
+   ========================================================================= */
+let ramaEditandoId = null;
+
+function vistaRamas(usuario){
+  return h`
+    <div class="page-head"><div><h1>Ramas y costos</h1><div class="sub">El costo se aplica a las mensualidades que generes de ahora en adelante; no modifica las ya generadas.</div></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Rama</th><th>Costo mensual</th></tr></thead>
+        <tbody>
+          ${db.ramas.slice().sort((a,b)=>a.nombre.localeCompare(b.nombre)).map(r=>h`
+            <tr>
+              <td>${esc(r.nombre)}</td>
+              <td>
+                ${ramaEditandoId===r.id ? h`
+                  <form onsubmit="return app.guardarCostoRama(event,'${r.id}')" style="display:flex;gap:6px;align-items:center">
+                    <input name="monto" type="number" step="0.01" min="0" value="${r.monto_mensual_base}" autofocus style="width:100px" required>
+                    <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+                    <button type="button" class="btn-link" onclick="app.cancelarEdicionCosto()">Cancelar</button>
+                  </form>
+                ` : h`
+                  <div style="display:flex;gap:10px;align-items:center">
+                    <b>${fmtMoney(r.monto_mensual_base)}</b>
+                    <button class="btn-link" onclick="app.editarCostoRama('${r.id}')">Editar</button>
+                  </div>
+                `}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* =========================================================================
+   VISTA: PAGOS
+   ========================================================================= */
+let pagosFiltro = { q:'', mes: new Date().getMonth()+1, anio: new Date().getFullYear(), estado:'' };
+
+let pagosCampusAbiertos = new Set();
+
+function vistaPagos(usuario){
+  let lista = db.mensualidades.filter(m=>m.periodo_mes===Number(pagosFiltro.mes) && m.periodo_anio===Number(pagosFiltro.anio));
+  if(pagosFiltro.estado) lista = lista.filter(m=>estadoEfectivo(m)===pagosFiltro.estado);
+  if(pagosFiltro.q){
+    const q = pagosFiltro.q.toLowerCase();
+    lista = lista.filter(m=>{ const e=db.estudiantes.find(x=>x.id===m.estudiante_id); return e && (e.nombres+' '+e.apellidos).toLowerCase().includes(q); });
+  }
+  lista = lista.sort((a,b)=> (a.fecha_creacion<b.fecha_creacion?1:-1));
+
+  const porCampus = {};
+  lista.forEach(m=>{
+    const e = db.estudiantes.find(x=>x.id===m.estudiante_id);
+    const campusId = e?.campus_principal_id || 'sin-campus';
+    (porCampus[campusId] = porCampus[campusId] || []).push(m);
+  });
+  const campusIds = Object.keys(porCampus).sort((a,b)=>{
+    const ca = db.campus.find(c=>c.id===a)?.nombre || '';
+    const cb = db.campus.find(c=>c.id===b)?.nombre || '';
+    return ca.localeCompare(cb);
+  });
+
+  return h`
+    <div class="page-head">
+      <div><h1>Pagos mensuales</h1><div class="sub">${lista.length} mensualidades en el periodo</div></div>
+      ${usuario.rol==='administrador' ? `<button class="btn" style="background:var(--verde);color:#fff" onclick="app.generarMensualidadesPeriodo()">Generar mensualidades del periodo</button>` : ''}
+    </div>
+    <div class="toolbar">
+      <input type="text" placeholder="Buscar estudiante..." value="${esc(pagosFiltro.q)}" oninput="app.filtrarPagos('q', this.value)" style="min-width:200px">
+      <select onchange="app.filtrarPagos('mes', this.value)">${MESES.map((m,i)=>`<option value="${i+1}" ${pagosFiltro.mes==i+1?'selected':''}>${m}</option>`).join('')}</select>
+      <input type="number" value="${pagosFiltro.anio}" oninput="app.filtrarPagos('anio', this.value)" style="width:90px">
+      <select onchange="app.filtrarPagos('estado', this.value)">
+        <option value="">Todos los estados</option>
+        ${Object.keys(ETQ_MENSUALIDAD).map(k=>`<option value="${k}" ${pagosFiltro.estado===k?'selected':''}>${ETQ_MENSUALIDAD[k].t}</option>`).join('')}
+      </select>
+    </div>
+
+    ${campusIds.length===0 ? `<div class="empty">No hay mensualidades para este periodo.${usuario.rol==='administrador'?' Genera el periodo con el botón de arriba.':''}</div>` : ''}
+
+    ${campusIds.map(campusId=>{
+      const campus = db.campus.find(c=>c.id===campusId);
+      const items = porCampus[campusId];
+      const abierto = pagosCampusAbiertos.has(campusId);
+      const pendientesCampus = items.filter(m=>['pendiente','parcial','vencido'].includes(estadoEfectivo(m))).length;
+      return h`
+        <div class="card" style="padding:0;margin-bottom:10px;overflow:hidden">
+          <button onclick="app.toggleCampusPagos('${campusId}')" style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:none;border:none;text-align:left">
+            <span style="font-weight:700;color:var(--azul)">${esc(campus?.nombre || 'Sin campus')}</span>
+            <span style="display:flex;align-items:center;gap:10px">
+              <span class="chip">${items.length} mensualidad${items.length===1?'':'es'}</span>
+              ${pendientesCampus>0 ? `<span class="chip" style="background:var(--ambar-bg);color:var(--ambar)">${pendientesCampus} por cobrar</span>` : ''}
+              <span style="color:var(--gris)">${abierto ? '▲' : '▼'}</span>
+            </span>
+          </button>
+          ${abierto ? h`
+            <div class="table-wrap" style="border:none;border-top:1px solid var(--border);border-radius:0">
+              <table>
+                <thead><tr><th>Estudiante</th><th>Rama</th><th>Total</th><th>Saldo</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                  ${items.map(m=>{
+                    const e = db.estudiantes.find(x=>x.id===m.estudiante_id);
+                    const r = db.ramas.find(x=>x.id===m.rama_id);
+                    const etq = ETQ_MENSUALIDAD[estadoEfectivo(m)];
+                    return h`<tr>
+                      <td>${esc(e?.apellidos)} ${esc(e?.nombres)}</td><td>${esc(r?.nombre)}</td>
+                      <td>${fmtMoney(m.total_a_pagar)}</td><td>${fmtMoney(m.saldo)}</td>
+                      <td><span class="badge ${etq.cls}">${etq.t}</span></td>
+                      <td style="text-align:right"><a class="btn-link" href="#/pagos/${m.id}">Ver →</a></td>
+                    </tr>`;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+function vistaPagoDetalle(usuario, mensualidadId){
+  const m = db.mensualidades.find(x=>x.id===mensualidadId);
+  if(!m) return '<div class="empty">Mensualidad no encontrada.</div>';
+  const e = db.estudiantes.find(x=>x.id===m.estudiante_id);
+  const r = db.ramas.find(x=>x.id===m.rama_id);
+  const ajustes = db.ajustes.filter(a=>a.mensualidad_id===mensualidadId).sort((a,b)=> b.fecha.localeCompare(a.fecha));
+  const pagos = db.pagos.filter(p=>p.mensualidad_id===mensualidadId).sort((a,b)=> b.fecha_registro.localeCompare(a.fecha_registro));
+  const efectivo = estadoEfectivo(m);
+  const etq = ETQ_MENSUALIDAD[efectivo];
+  const puedeGestionar = puedeGestionarPagos(usuario.rol);
+  const bloqueado = ['exonerado','anulado'].includes(efectivo);
+
+  return h`
+    <a class="link-back" href="#/pagos">← Volver a pagos</a>
+    <div class="page-head"><div><h1>${esc(e?.apellidos)} ${esc(e?.nombres)}</h1><div class="sub">${esc(r?.nombre)} · ${MESES[m.periodo_mes-1]} ${m.periodo_anio} · Fecha límite: ${fmtDate(m.fecha_limite)}</div></div></div>
+
+    <div class="card" style="margin-bottom:16px">
+      <span class="badge ${etq.cls}" style="margin-bottom:10px;display:inline-block">${etq.t}</span>
+      <dl class="breakdown">
+        <dt>Monto base</dt><dd>${fmtMoney(m.monto_base)}</dd>
+        <dt>Descuentos</dt><dd style="color:var(--ambar)">- ${fmtMoney(m.total_descuentos)}</dd>
+        <dt>Becas</dt><dd style="color:var(--ambar)">- ${fmtMoney(m.total_becas)}</dd>
+        <dt>Exoneraciones</dt><dd style="color:var(--ambar)">- ${fmtMoney(m.total_exoneraciones)}</dd>
+        <dt class="tot">Total a pagar</dt><dd class="tot">${fmtMoney(m.total_a_pagar)}</dd>
+        <dt>Total pagado</dt><dd style="color:var(--verde)">${fmtMoney(m.total_pagado)}</dd>
+        <dt><b>Saldo</b></dt><dd><b>${fmtMoney(m.saldo)}</b></dd>
+      </dl>
+    </div>
+
+    ${(puedeGestionar && !bloqueado && m.saldo>0) ? h`
+      <div class="card" style="margin-bottom:16px">
+        <div class="section-title">Registrar pago</div>
+        <form onsubmit="return app.registrarPago(event, '${mensualidadId}')">
+          <div class="two-col">
+            <div class="field"><label>Monto</label><input id="pagoMonto" name="monto" type="number" step="0.01" min="0.01" max="${m.saldo}" required></div>
+            <div class="field"><label>Método</label><select name="metodo_pago">${['efectivo','transferencia','deposito','tarjeta','otro'].map(x=>`<option value="${x}">${x}</option>`).join('')}</select></div>
+            <div class="field"><label>Referencia (opcional)</label><input name="referencia"></div>
+            <div class="field"><label>Observación (opcional)</label><input name="observacion"></div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button type="submit" class="btn btn-primary">Guardar pago parcial</button>
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('pagoMonto').value='${m.saldo}'">Usar saldo total</button>
+          </div>
+        </form>
+      </div>
+    ` : ''}
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="section-title">Historial de pagos</div>
+      <table>
+        <thead><tr><th>Fecha</th><th>Método</th><th>Monto</th><th></th><th></th></tr></thead>
+        <tbody>
+          ${pagos.map(p=>h`
+            <tr style="${p.estado==='anulado'?'opacity:.5':''}">
+              <td>${fmtDate(p.fecha_pago)}</td><td>${p.metodo_pago}</td><td>${fmtMoney(p.monto)}</td>
+              <td>${p.estado==='anulado' ? 'Anulado: '+esc(p.motivo_anulacion||'') : ''}</td>
+              <td style="text-align:right">${(puedeGestionar && p.estado==='activo') ? `<button class="btn-link" style="color:var(--rojo)" onclick="app.anularPago('${p.id}','${mensualidadId}')">Anular</button>` : ''}</td>
+            </tr>`).join('') || '<tr><td colspan="5" class="empty">Sin pagos registrados.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Descuentos, becas y exoneraciones</div>
+      <table>
+        <thead><tr><th>Tipo</th><th>Valor</th><th>Motivo</th><th></th></tr></thead>
+        <tbody>
+          ${ajustes.map(a=>h`
+            <tr style="${a.estado==='anulado'?'opacity:.5':''}">
+              <td style="text-transform:capitalize">${a.tipo}</td>
+              <td>${a.valor_tipo==='porcentaje' ? a.valor+'%' : fmtMoney(a.valor)}</td>
+              <td>${esc(a.motivo)}</td>
+              <td style="text-align:right">${(puedeGestionar && a.estado==='activo') ? `<button class="btn-link" style="color:var(--rojo)" onclick="app.anularAjuste('${a.id}','${mensualidadId}')">Anular</button>` : ''}</td>
+            </tr>`).join('') || '<tr><td colspan="4" class="empty">Sin ajustes.</td></tr>'}
+        </tbody>
+      </table>
+
+      ${puedeGestionar ? h`
+        <form onsubmit="return app.agregarAjuste(event, '${mensualidadId}')" style="border-top:1px solid var(--border);margin-top:14px;padding-top:14px">
+          <div class="two-col">
+            <div class="field"><label>Tipo</label>
+              <select name="tipo"><option value="descuento">Descuento</option><option value="beca">Beca</option><option value="exoneracion">Exoneración</option></select>
+            </div>
+            <div class="field"><label>Valor</label>
+              <div style="display:flex;gap:6px">
+                <select name="valor_tipo" style="width:70px"><option value="porcentaje">%</option><option value="monto">$</option></select>
+                <input name="valor" type="number" step="0.01" min="0" required style="flex:1">
+              </div>
+            </div>
+          </div>
+          <div class="field"><label>Motivo</label><input name="motivo" required></div>
+          <button type="submit" class="btn btn-primary">Aplicar ajuste</button>
+        </form>
+      ` : ''}
+    </div>
+  `;
+}
+
+/* =========================================================================
+   VISTA: JUSTIFICACIONES (JUS-01 a JUS-06)
+   ========================================================================= */
+function estudiantesDeMisGrupos(usuario){
+  if(esGestion(usuario.rol)) return db.estudiantes;
+  const prof = profesorPropio(usuario);
+  const misRamaCampus = (prof && prof.activo)
+    ? db.profesor_rama.filter(pr=>pr.profesor_id===prof.id && pr.activo).map(pr=>pr.rama_id+'|'+pr.campus_id)
+    : [];
+  const idsPermitidos = new Set(db.estudiante_rama.filter(er=>misRamaCampus.includes(er.rama_id+'|'+er.campus_id)).map(er=>er.estudiante_id));
+  return db.estudiantes.filter(e=>idsPermitidos.has(e.id));
+}
+
+function vistaJustificaciones(usuario){
+  const misEstudiantes = estudiantesDeMisGrupos(usuario);
+  const misIds = new Set(misEstudiantes.map(e=>e.id));
+  const lista = db.justificaciones.filter(j=> esGestion(usuario.rol) || misIds.has(j.estudiante_id))
+    .sort((a,b)=> b.fecha_creacion.localeCompare(a.fecha_creacion));
+
+  return h`
+    <div class="page-head"><div><h1>Justificaciones</h1><div class="sub">${lista.length} registradas</div></div></div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="section-title">Nueva justificación</div>
+      <form onsubmit="return app.crearJustificacion(event)">
+        <div class="two-col">
+          <div class="field"><label>Estudiante</label>
+            <select name="estudiante_id" required>${misEstudiantes.sort((a,b)=>a.apellidos.localeCompare(b.apellidos)).map(e=>`<option value="${e.id}">${esc(e.apellidos)} ${esc(e.nombres)}</option>`).join('')}</select>
+          </div>
+          <div class="field"><label>Rama</label><select name="rama_id" required>${db.ramas.map(r=>`<option value="${r.id}">${esc(r.nombre)}</option>`).join('')}</select></div>
+          <div class="field"><label>Fecha</label><input name="fecha" type="date" value="${todayStr()}" required></div>
+          <div class="field"><label>Tipo</label>
+            <select name="tipo"><option value="medica">Médica</option><option value="familiar">Familiar</option><option value="academica">Académica</option><option value="personal">Personal</option><option value="otra">Otra</option></select>
+          </div>
+        </div>
+        <div class="field"><label>Motivo</label><input name="motivo" required></div>
+        <div class="field"><label>Observación (opcional)</label><textarea name="observacion" rows="2"></textarea></div>
+        <div class="field"><label>Adjunto (opcional)</label><input name="adjunto" type="file"></div>
+        <button type="submit" class="btn btn-primary">Guardar justificación</button>
+      </form>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Estudiante</th><th>Fecha</th><th>Rama</th><th>Tipo</th><th>Motivo</th><th>Registrado por</th></tr></thead>
+        <tbody>
+          ${lista.map(j=>{
+            const e = db.estudiantes.find(x=>x.id===j.estudiante_id);
+            const r = db.ramas.find(x=>x.id===j.rama_id);
+            const u = db.usuarios.find(x=>x.id===j.usuario_id);
+            return h`<tr><td>${esc(e?.apellidos)} ${esc(e?.nombres)}</td><td>${fmtDate(j.fecha)}</td><td>${esc(r?.nombre)}</td><td style="text-transform:capitalize">${j.tipo}</td><td>${esc(j.motivo)}</td><td>${esc(nombreCompleto(u))}</td></tr>`;
+          }).join('') || '<tr><td colspan="6" class="empty">Sin justificaciones registradas.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* =========================================================================
+   VISTA: REPORTES (PAG-23/24, REP-08/09/10)
+   ========================================================================= */
+function vistaReportes(usuario){
+  const cartera = db.mensualidades.filter(m=>['pendiente','parcial','vencido'].includes(estadoEfectivo(m))).sort((a,b)=>b.saldo-a.saldo);
+  const ahora = new Date();
+  const delMes = db.mensualidades.filter(m=>m.periodo_mes===ahora.getMonth()+1 && m.periodo_anio===ahora.getFullYear());
+  const esperado = round2(delMes.reduce((a,m)=>a+m.monto_base,0));
+  const recaudado = round2(delMes.reduce((a,m)=>a+m.total_pagado,0));
+  const pendiente = round2(delMes.filter(m=>['pendiente','parcial'].includes(estadoEfectivo(m))).reduce((a,m)=>a+m.saldo,0));
+  const vencido = round2(delMes.filter(m=>estadoEfectivo(m)==='vencido').reduce((a,m)=>a+m.saldo,0));
+  const parciales = delMes.filter(m=>m.estado==='parcial').length;
+  const exonerados = delMes.filter(m=>m.estado==='exonerado').length;
+  const becados = db.ajustes.filter(a=>a.tipo==='beca' && a.estado==='activo' && delMes.some(m=>m.id===a.mensualidad_id)).length;
+  const descontados = db.ajustes.filter(a=>a.tipo==='descuento' && a.estado==='activo' && delMes.some(m=>m.id===a.mensualidad_id)).length;
+
+  return h`
+    <div class="page-head"><h1>Reportes</h1></div>
+
+    <div class="section-title">Resumen del mes — ${MESES[ahora.getMonth()]} ${ahora.getFullYear()}</div>
+    <div class="grid grid-kpi" style="margin-bottom:22px">
+      <div class="kpi"><div class="t">Esperado</div><div class="v">${fmtMoney(esperado)}</div></div>
+      <div class="kpi"><div class="t">Recaudado</div><div class="v" style="color:var(--verde)">${fmtMoney(recaudado)}</div></div>
+      <div class="kpi"><div class="t">Pendiente</div><div class="v" style="color:var(--ambar)">${fmtMoney(pendiente)}</div></div>
+      <div class="kpi"><div class="t">Vencido</div><div class="v" style="color:var(--rojo)">${fmtMoney(vencido)}</div></div>
+      <div class="kpi"><div class="t">Parciales</div><div class="v">${parciales}</div></div>
+      <div class="kpi"><div class="t">Exonerados</div><div class="v">${exonerados}</div></div>
+      <div class="kpi"><div class="t">Becados</div><div class="v">${becados}</div></div>
+      <div class="kpi"><div class="t">Con descuento</div><div class="v">${descontados}</div></div>
+    </div>
+
+    <div class="page-head"><div><h2 style="font-size:16px;color:var(--azul)">Cartera pendiente</h2><div class="sub">${cartera.length} mensualidades</div></div>
+      <button class="btn btn-outline" onclick="app.exportarCarteraCsv()">Exportar CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Estudiante</th><th>Rama</th><th>Periodo</th><th>Saldo</th><th>Fecha límite</th><th>Estado</th></tr></thead>
+        <tbody>
+          ${cartera.map(m=>{
+            const e = db.estudiantes.find(x=>x.id===m.estudiante_id);
+            const r = db.ramas.find(x=>x.id===m.rama_id);
+            const etq = ETQ_MENSUALIDAD[estadoEfectivo(m)];
+            return h`<tr><td>${esc(e?.apellidos)} ${esc(e?.nombres)}</td><td>${esc(r?.nombre)}</td><td>${MESES[m.periodo_mes-1]} ${m.periodo_anio}</td><td><b>${fmtMoney(m.saldo)}</b></td><td>${fmtDate(m.fecha_limite)}</td><td><span class="badge ${etq.cls}">${etq.t}</span></td></tr>`;
+          }).join('') || '<tr><td colspan="6" class="empty">No hay cartera pendiente.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* =========================================================================
+   VISTA: AUDITORÍA (AUD-01/02)
+   ========================================================================= */
+function vistaAuditoria(usuario){
+  const lista = db.auditoria.slice(0, 200);
+  return h`
+    <div class="page-head"><div><h1>Auditoría</h1><div class="sub">Registro de acciones críticas del sistema</div></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fecha</th><th>Usuario</th><th>Tabla</th><th>Acción</th><th>Detalle</th></tr></thead>
+        <tbody>
+          ${lista.map(a=>h`<tr><td>${fmtDateTime(a.fecha)}</td><td>${esc(a.usuario)}</td><td>${esc(a.tabla)}</td><td style="text-transform:capitalize">${esc(a.accion)}</td><td>${esc(a.detalle||'')}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">Sin registros.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* =========================================================================
+   MANEJADORES DE EVENTOS (expuestos como window.app para los atributos
+   onclick/onsubmit/onchange, que se ejecutan en el ámbito global)
+   ========================================================================= */
+const app = {
+  iniciarSesion, cerrarSesion, reiniciarDemo,
+
+  manejarLoginManual(e){
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const u = db.usuarios.find(x=>x.email.toLowerCase()===email && x.activo);
+    if(!u){
+      alert('Correo no encontrado. Usa uno de los usuarios de demostración (p. ej. admin1@rewa.ec, gerente@rewa.ec, profe1@rewa.ec). En este modo demo la contraseña no se valida.');
+      return false;
+    }
+    iniciarSesion(u.id);
+    return false;
+  },
+
+  cambiarFechaAsistencia(v){ asistenciaFecha = v; render(); },
+  filtrarPaseLista(v){ window.__paseListaBusqueda = v; render(); },
+  marcarEstado(estudianteId, estado){ if(!window.__paseLista) window.__paseLista={}; window.__paseLista[estudianteId]=estado; render(); },
+  marcarTodosPresentes(sesionId){ Object.keys(window.__paseLista||{}).forEach(k=> window.__paseLista[k]='presente'); render(); },
+
+  guardarAsistencia(sesionId){
+    const s = db.sesiones.find(x=>x.id===sesionId);
+    if(!s) return;
+    const usuario = usuarioActual();
+    const obsEl = document.getElementById('obsGeneral');
+    const estados = window.__paseLista || {};
+    Object.keys(estados).forEach(estId=>{
+      const existente = db.asistencias.find(a=>a.sesion_id===sesionId && a.estudiante_id===estId);
+      if(existente){
+        if(existente.estado !== estados[estId]){
+          existente.estado = estados[estId];
+          existente.corregido = true;
+          existente.usuario_correccion = usuario.id;
+          existente.fecha_correccion = new Date().toISOString();
+          auditar('asistencias', existente.id, 'corregir', 'Estado cambiado a '+estados[estId]);
+        }
+      } else {
+        db.asistencias.push({ id: uid('asi'), sesion_id: sesionId, estudiante_id: estId, estado: estados[estId],
+          observacion_individual: null, usuario_registro: usuario.id, fecha_registro: new Date().toISOString(), corregido: false });
+      }
+    });
+    s.estado = 'registro_completado';
+    s.observacion_general = obsEl ? obsEl.value : s.observacion_general;
+    auditar('sesiones', sesionId, 'pasar_asistencia', 'Asistencia guardada para '+Object.keys(estados).length+' estudiantes');
+    guardarDB();
+    alert('Asistencia guardada correctamente.');
+    render();
+  },
+
+  buscarEstudiantes(v){ estudiantesBusqueda = v; render(); },
+
+  crearEstudiante(e){
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const id = uid('est');
+    const campusId = fd.get('campus_principal_id');
+    const nuevo = {
+      id, nombres: fd.get('nombres'), apellidos: fd.get('apellidos'), fecha_nacimiento: fd.get('fecha_nacimiento'),
+      campus_principal_id: campusId, estado: 'activo',
+      contacto_telefono: null, contacto_email: null,
+      representante_nombre: fd.get('representante_nombre'), representante_telefono: fd.get('representante_telefono'),
+      representante_email: null, curso: fd.get('curso') || null,
+      contacto_emergencia_nombre: null, contacto_emergencia_telefono: null,
+      observaciones_medicas: fd.get('observaciones_medicas') || null
+    };
+    db.estudiantes.push(nuevo);
+    const ramaId = fd.get('rama_id');
+    if(ramaId){ db.estudiante_rama.push({ id: uid('er'), estudiante_id: id, rama_id: ramaId, campus_id: campusId, fecha_inscripcion: todayStr(), estado: 'activo' }); }
+    auditar('estudiantes', id, 'crear', nombreCompleto(nuevo)+' registrado');
+    guardarDB();
+    location.hash = '#/estudiantes';
+    render();
+    return false;
+  },
+
+  crearAsignacion(e, profesorId){
+    e.preventDefault();
+    const usuario = usuarioActual();
+    if(!esGestion(usuario.rol)){ alert('No tiene permisos para asignar profesores.'); return false; }
+    const fd = new FormData(e.target);
+    const ramaId = fd.get('rama_id'), campusId = fd.get('campus_id'), tipo = fd.get('tipo');
+
+    const existente = db.profesor_rama.find(pr=>pr.profesor_id===profesorId && pr.rama_id===ramaId && pr.campus_id===campusId && pr.tipo===tipo);
+    if(existente){
+      if(existente.activo){ alert('Ese profesor ya tiene esa asignación.'); return false; }
+      existente.activo = true; existente.asignado_por = usuario.id; existente.fecha_creacion = new Date().toISOString();
+      auditar('profesor_rama', existente.id, 'editar', 'Reactivada asignación');
+    } else {
+      const nueva = { id: uid('pr'), profesor_id: profesorId, rama_id: ramaId, campus_id: campusId, tipo, activo: true, asignado_por: usuario.id, fecha_creacion: new Date().toISOString() };
+      db.profesor_rama.push(nueva);
+      auditar('profesor_rama', nueva.id, 'crear', 'Nueva asignación ('+tipo+')');
+    }
+    guardarDB();
+    render();
+    return false;
+  },
+
+  quitarAsignacion(asignacionId, profesorId){
+    const usuario = usuarioActual();
+    if(!esGestion(usuario.rol)){ alert('No tiene permisos para modificar asignaciones.'); return; }
+    if(!confirm('¿Quitar esta asignación? El profesor dejará de ver ese campus/rama y de poder pasar asistencia ahí.')) return;
+    const pr = db.profesor_rama.find(x=>x.id===asignacionId);
+    if(pr) pr.activo = false;
+    auditar('profesor_rama', asignacionId, 'eliminar', 'Asignación desactivada');
+    guardarDB();
+    render();
+  },
+
+  crearProfesor(e){
+    e.preventDefault();
+    const usuario = usuarioActual();
+    if(!esGestion(usuario.rol)){ alert('No tiene permisos para gestionar profesores.'); return false; }
+    const fd = new FormData(e.target);
+    const nuevo = {
+      id: uid('prof'), usuario_id: null,
+      nombres: fd.get('nombres'), apellidos: fd.get('apellidos'),
+      telefono: fd.get('telefono') || null, email: fd.get('email') || null,
+      activo: true
+    };
+    db.profesores.push(nuevo);
+    auditar('profesores', nuevo.id, 'crear', nombreCompleto(nuevo)+' registrado');
+    guardarDB();
+    location.hash = '#/profesores';
+    render();
+    return false;
+  },
+
+  cambiarEstadoProfesor(profesorId, activo){
+    const usuario = usuarioActual();
+    if(!esGestion(usuario.rol)){ alert('No tiene permisos para gestionar profesores.'); return; }
+    const mensaje = activo
+      ? '¿Reactivar a este profesor?'
+      : '¿Desactivar a este profesor? No se borra su historial de horarios ni asistencia registrada; solo deja de aparecer como disponible para nuevas asignaciones.';
+    if(!confirm(mensaje)) return;
+    const p = db.profesores.find(x=>x.id===profesorId);
+    if(!p) return;
+    p.activo = activo;
+    auditar('profesores', profesorId, activo ? 'activar' : 'desactivar', nombreCompleto(p));
+    guardarDB();
+    render();
+  },
+
+  descargarPlantilla(){
+    const blob = new Blob(['﻿'+plantillaCsv()], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'plantilla_estudiantes_rewa.csv'; a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  procesarArchivoImportacion(file){
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => { importacionFilas = parsearCsv(String(ev.target.result)); render(); };
+    reader.readAsText(file);
+  },
+
+  confirmarImportacion(){
+    if(!importacionFilas) return;
+    const usuario = usuarioActual();
+    const validadas = importacionFilas.map(f=>({...f, ...validarFilaImportacion(f)}));
+    let creados=0, errores=0, duplicados=0;
+    validadas.forEach(v=>{
+      if(v.errores.length>0){ errores++; return; }
+      const id = uid('est');
+      db.estudiantes.push({
+        id, nombres: v.nombres, apellidos: v.apellidos, fecha_nacimiento: v.fecha_nacimiento,
+        campus_principal_id: v.campusId, estado: 'activo',
+        contacto_telefono: null, contacto_email: null,
+        representante_nombre: v.representante_nombre, representante_telefono: v.representante_telefono,
+        representante_email: null, curso: v.curso || null,
+        contacto_emergencia_nombre: null, contacto_emergencia_telefono: null, observaciones_medicas: null
+      });
+      creados++;
+      if(v.duplicado) duplicados++;
+    });
+    const impId = uid('imp');
+    db.importaciones.push({ id: impId, nombre_archivo: 'importacion.csv', usuario: nombreCompleto(usuario), fecha: new Date().toISOString(), total_filas: validadas.length, creados, actualizados: 0, errores });
+    auditar('estudiantes', impId, 'importar', creados+' creados, '+duplicados+' posibles duplicados, '+errores+' con errores');
+    guardarDB();
+    alert('Importación completada: '+creados+' estudiantes creados ('+duplicados+' posibles duplicados a revisar), '+errores+' filas con errores.');
+    importacionFilas = null;
+    location.hash = '#/estudiantes';
+    render();
+  },
+
+  cancelarImportacion(){ importacionFilas = null; render(); },
+
+  filtrarPagos(campo, valor){ pagosFiltro[campo] = valor; render(); },
+  toggleCampusPagos(campusId){
+    if(pagosCampusAbiertos.has(campusId)) pagosCampusAbiertos.delete(campusId);
+    else pagosCampusAbiertos.add(campusId);
+    render();
+  },
+
+  generarMensualidadesPeriodo(){
+    const usuario = usuarioActual();
+    const mes = Number(pagosFiltro.mes), anio = Number(pagosFiltro.anio);
+    let creadas = 0;
+    db.estudiante_rama.filter(er=>er.estado==='activo').forEach(er=>{
+      const est = db.estudiantes.find(e=>e.id===er.estudiante_id);
+      if(!est || est.estado!=='activo') return;
+      const existe = db.mensualidades.some(m=>m.estudiante_id===er.estudiante_id && m.rama_id===er.rama_id && m.periodo_mes===mes && m.periodo_anio===anio);
+      if(existe) return;
+      const rama = db.ramas.find(r=>r.id===er.rama_id);
+      const fechaLimite = dateOnly(new Date(anio, mes, 5));
+      db.mensualidades.push({ id: uid('mens'), estudiante_id: er.estudiante_id, rama_id: er.rama_id, periodo_mes: mes, periodo_anio: anio,
+        monto_base: rama.monto_mensual_base, total_descuentos: 0, total_becas: 0, total_exoneraciones: 0,
+        total_a_pagar: rama.monto_mensual_base, total_pagado: 0, saldo: rama.monto_mensual_base,
+        estado: 'pendiente', fecha_limite: fechaLimite, observacion: null, creado_por: usuario.id, fecha_creacion: new Date().toISOString() });
+      creadas++;
+    });
+    auditar('mensualidades', '-', 'generar_periodo', creadas+' mensualidades generadas para '+MESES[mes-1]+' '+anio);
+    guardarDB();
+    alert(creadas+' mensualidades nuevas generadas para el periodo (las ya existentes no se duplican).');
+    render();
+  },
+
+  registrarPago(e, mensualidadId){
+    e.preventDefault();
+    const usuario = usuarioActual();
+    const fd = new FormData(e.target);
+    const monto = round2(Number(fd.get('monto')));
+    const m = db.mensualidades.find(x=>x.id===mensualidadId);
+    if(!(monto > 0)){ alert('El monto debe ser mayor a 0.'); return false; }
+    if(monto > m.saldo){ alert('El abono ('+fmtMoney(monto)+') excede el saldo pendiente ('+fmtMoney(m.saldo)+').'); return false; }
+    const pago = { id: uid('pago'), mensualidad_id: mensualidadId, monto, fecha_pago: todayStr(), metodo_pago: fd.get('metodo_pago'),
+      referencia: fd.get('referencia') || null, comprobante_nombre: null, observacion: fd.get('observacion') || null,
+      estado: 'activo', motivo_anulacion: null, usuario_registro: usuario.id, fecha_registro: new Date().toISOString(), usuario_anulacion: null, fecha_anulacion: null };
+    db.pagos.push(pago);
+    recalcularMensualidad(db, mensualidadId);
+    auditar('pagos', pago.id, 'crear', fmtMoney(monto)+' registrado por '+fd.get('metodo_pago'));
+    guardarDB();
+    render();
+    return false;
+  },
+
+  anularPago(pagoId, mensualidadId){
+    mostrarModal(h`
+      <h3 style="margin-bottom:4px">Anular pago</h3>
+      <p class="muted" style="margin-bottom:14px">El saldo de la mensualidad se recalculará automáticamente.</p>
+      <form onsubmit="return app.confirmarAnularPago(event,'${pagoId}','${mensualidadId}')">
+        <div class="field"><label>Motivo de anulación</label><textarea name="motivo" rows="2" required></textarea></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+          <button type="button" class="btn btn-outline" onclick="app.cerrarModal()">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Anular pago</button>
+        </div>
+      </form>
+    `);
+  },
+  confirmarAnularPago(e, pagoId, mensualidadId){
+    e.preventDefault();
+    const motivo = String(new FormData(e.target).get('motivo') || '').trim();
+    if(!motivo) return false;
+    const usuario = usuarioActual();
+    const p = db.pagos.find(x=>x.id===pagoId);
+    p.estado = 'anulado'; p.motivo_anulacion = motivo; p.usuario_anulacion = usuario.id; p.fecha_anulacion = new Date().toISOString();
+    recalcularMensualidad(db, mensualidadId);
+    auditar('pagos', pagoId, 'anular', motivo);
+    guardarDB();
+    cerrarModal();
+    render();
+    return false;
+  },
+
+  anularAjuste(ajusteId, mensualidadId){
+    mostrarModal(h`
+      <h3 style="margin-bottom:4px">Anular ajuste</h3>
+      <p class="muted" style="margin-bottom:16px">El saldo de la mensualidad se recalculará automáticamente.</p>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-outline" onclick="app.cerrarModal()">Cancelar</button>
+        <button class="btn btn-danger" onclick="app.confirmarAnularAjuste('${ajusteId}','${mensualidadId}')">Anular ajuste</button>
+      </div>
+    `);
+  },
+  confirmarAnularAjuste(ajusteId, mensualidadId){
+    const a = db.ajustes.find(x=>x.id===ajusteId);
+    a.estado = 'anulado';
+    recalcularMensualidad(db, mensualidadId);
+    auditar('ajustes_mensualidad', ajusteId, 'anular', 'Ajuste de '+a.tipo+' anulado');
+    guardarDB();
+    cerrarModal();
+    render();
+  },
+
+  cerrarModal,
+
+  editarCostoRama(ramaId){ ramaEditandoId = ramaId; render(); },
+  cancelarEdicionCosto(){ ramaEditandoId = null; render(); },
+  guardarCostoRama(e, ramaId){
+    e.preventDefault();
+    const usuario = usuarioActual();
+    if(!esGestion(usuario.rol)){ alert('No tiene permisos para modificar costos de mensualidad.'); return false; }
+    const fd = new FormData(e.target);
+    const monto = Number(fd.get('monto'));
+    if(!(monto >= 0)){ alert('El monto debe ser mayor o igual a 0.'); return false; }
+    const rama = db.ramas.find(r=>r.id===ramaId);
+    const montoAnterior = rama.monto_mensual_base;
+    rama.monto_mensual_base = monto;
+    auditar('ramas', ramaId, 'editar_costo', 'Costo de '+rama.nombre+' cambiado de '+fmtMoney(montoAnterior)+' a '+fmtMoney(monto));
+    ramaEditandoId = null;
+    guardarDB();
+    render();
+    return false;
+  },
+
+  agregarAjuste(e, mensualidadId){
+    e.preventDefault();
+    const usuario = usuarioActual();
+    const fd = new FormData(e.target);
+    const tipo = fd.get('tipo'), valorTipo = fd.get('valor_tipo'), valor = Number(fd.get('valor')), motivo = String(fd.get('motivo')||'');
+    if(valorTipo==='porcentaje' && (valor<=0 || valor>100)){ alert('El porcentaje debe estar entre 1 y 100.'); return false; }
+    if(valorTipo==='monto' && valor<=0){ alert('El monto debe ser mayor a 0.'); return false; }
+    if(!motivo.trim()){ alert('El motivo es obligatorio.'); return false; }
+    const aj = { id: uid('aj'), mensualidad_id: mensualidadId, tipo, valor_tipo: valorTipo, valor, motivo, usuario_id: usuario.id, fecha: new Date().toISOString(), estado: 'activo' };
+    db.ajustes.push(aj);
+    recalcularMensualidad(db, mensualidadId);
+    auditar('ajustes_mensualidad', aj.id, 'crear', tipo+' de '+(valorTipo==='porcentaje' ? valor+'%' : fmtMoney(valor)));
+    guardarDB();
+    render();
+    return false;
+  },
+
+  crearJustificacion(e){
+    e.preventDefault();
+    const usuario = usuarioActual();
+    const fd = new FormData(e.target);
+    const archivo = fd.get('adjunto');
+    const j = { id: uid('jus'), estudiante_id: fd.get('estudiante_id'), sesion_id: null, fecha: fd.get('fecha'), rama_id: fd.get('rama_id'),
+      tipo: fd.get('tipo'), motivo: fd.get('motivo'), observacion: fd.get('observacion') || null,
+      adjunto_nombre: (archivo && archivo.name) ? archivo.name : null, adjunto_url: null,
+      usuario_id: usuario.id, fecha_creacion: new Date().toISOString() };
+    db.justificaciones.push(j);
+    auditar('justificaciones', j.id, 'crear', 'Justificación '+j.tipo+' registrada');
+    guardarDB();
+    alert('Justificación registrada.');
+    render();
+    return false;
+  },
+
+  exportarCarteraCsv(){
+    const cartera = db.mensualidades.filter(m=>['pendiente','parcial','vencido'].includes(estadoEfectivo(m)));
+    const encabezado = ['Estudiante','Rama','Periodo','Saldo','Fecha limite','Estado'];
+    const filas = cartera.map(m=>{
+      const e = db.estudiantes.find(x=>x.id===m.estudiante_id);
+      const r = db.ramas.find(x=>x.id===m.rama_id);
+      return [nombreCompleto(e), r?.nombre, MESES[m.periodo_mes-1]+' '+m.periodo_anio, m.saldo, m.fecha_limite, estadoEfectivo(m)];
+    });
+    const csv = [encabezado, ...filas].map(fila=> fila.map(v=> '"'+String(v ?? '').replace(/"/g,'""')+'"').join(',')).join('\n');
+    const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'cartera_pendiente_rewa.csv'; a.click();
+    URL.revokeObjectURL(url);
+  },
+};
+window.app = app;
+
+/* =========================================================================
+   ARRANQUE
+   ========================================================================= */
+cargarDB();
+try {
+  const raw = sessionStorage.getItem(SESSION_KEY);
+  if(raw){ sesion = JSON.parse(raw); if(!usuarioActual()) sesion = null; }
+} catch(e){ sesion = null; }
+if(!location.hash) location.hash = sesion ? '#/inicio' : '#/login';
+render();
+
+})();
+</script>
+</body>
+</html>
