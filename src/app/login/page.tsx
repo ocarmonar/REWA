@@ -23,10 +23,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        // Temporal: se muestra el mensaje real de Supabase para diagnosticar
-        // el problema de acceso. Antes de mostrarlo a usuarios finales, volver
-        // al mensaje genérico "Correo o contraseña incorrectos."
-        setError(`${error.message} (código: ${error.status ?? "?"})`);
+        setError("Correo o contraseña incorrectos.");
         setCargando(false);
         return;
       }
@@ -36,10 +33,10 @@ export default function LoginPage() {
       // donde el servidor a veces no veía la cookie todavía y rebotaba de
       // vuelta a /login, entrando en un ciclo con el middleware.
       window.location.href = "/inicio";
-    } catch (err: any) {
-      // Cualquier excepción (p. ej. una URL de Supabase mal formada) se
-      // muestra en pantalla en vez de tumbar toda la página.
-      setError(`Excepción: ${err?.message ?? String(err)}`);
+    } catch {
+      // Cualquier excepción (p. ej. un problema de conexión) se muestra en
+      // pantalla en vez de tumbar toda la página.
+      setError("No se pudo iniciar sesión. Intenta de nuevo en unos minutos.");
       setCargando(false);
     }
   }
@@ -91,12 +88,6 @@ export default function LoginPage() {
             </a>
           </p>
         </form>
-
-        {/* Temporal, solo para depurar el despliegue: confirma qué URL quedó
-            realmente incluida en el sitio. Quitar una vez resuelto. */}
-        <p className="text-center text-xs text-gray-400 mt-4 break-all">
-          URL configurada: {process.env.NEXT_PUBLIC_SUPABASE_URL || "(vacía)"}
-        </p>
       </div>
     </div>
   );
