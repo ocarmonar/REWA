@@ -644,18 +644,29 @@ alter table ajustes_mensualidad enable row level security;
 alter table pagos enable row level security;
 alter table auditoria enable row level security;
 
--- Helper: rol del usuario autenticado actual
+-- Helper: rol del usuario autenticado actual.
+-- SECURITY DEFINER es obligatorio aquí: la política de SELECT de "usuarios"
+-- llama a esta función para decidir si puedes leer la tabla; si esta función
+-- corriera con los privilegios del invocador (comportamiento por defecto),
+-- su propio "select ... from usuarios" quedaría sujeto a esa misma política,
+-- que a su vez vuelve a llamar a esta función — recursión infinita que
+-- Postgres corta devolviendo un error, interpretado como "usuario no
+-- encontrado" y provocando un ciclo de redirección login <-> app.
+-- set search_path fija el esquema para que un search_path malicioso no pueda
+-- secuestrar esta función (buena práctica obligatoria con SECURITY DEFINER).
 create or replace function fn_rol_actual() returns rol_usuario as $$
   select rol from usuarios where auth_user_id = auth.uid();
-$$ language sql stable;
+$$ language sql stable security definer set search_path = public;
 
+-- Mismo motivo: profesores/usuarios están detrás de políticas que llaman a
+-- fn_rol_actual(), así que esta función también necesita SECURITY DEFINER.
 -- p.activo = true es a propósito: un profesor desactivado (PRO-03) pierde de
 -- inmediato todo permiso que dependa de esta función (asistencia, sesiones,
 -- justificaciones, estudiantes de sus grupos) sin tener que tocar cada policy.
 create or replace function fn_profesor_id_actual() returns uuid as $$
   select p.id from profesores p join usuarios u on u.id = p.usuario_id
   where u.auth_user_id = auth.uid() and p.activo = true;
-$$ language sql stable;
+$$ language sql stable security definer set search_path = public;
 
 -- Lectura general: todo usuario autenticado con fila en "usuarios" puede leer catálogos
 create policy p_campus_select on campus for select using (fn_rol_actual() is not null);
