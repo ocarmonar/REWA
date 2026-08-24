@@ -16,23 +16,30 @@ export default function LoginPage() {
     setError(null);
     setCargando(true);
 
-    // El cliente se crea aquí adentro, no en el cuerpo del componente: si se
-    // creara arriba, Next.js lo ejecutaría también al pre-renderizar esta
-    // página en el build, y si las variables de entorno de Supabase no están
-    // disponibles en ese momento, tumbaría el build entero.
-    const supabase = crearClienteNavegador();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      // El cliente se crea aquí adentro, no en el cuerpo del componente: si se
+      // creara arriba, Next.js lo ejecutaría también al pre-renderizar esta
+      // página en el build, y si las variables de entorno de Supabase no están
+      // disponibles en ese momento, tumbaría el build entero.
+      const supabase = crearClienteNavegador();
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-    setCargando(false);
-    if (error) {
-      // Temporal: se muestra el mensaje real de Supabase para diagnosticar
-      // el problema de acceso. Antes de mostrarlo a usuarios finales, volver
-      // al mensaje genérico "Correo o contraseña incorrectos."
-      setError(`${error.message} (código: ${error.status ?? "?"})`);
-      return;
+      if (error) {
+        // Temporal: se muestra el mensaje real de Supabase para diagnosticar
+        // el problema de acceso. Antes de mostrarlo a usuarios finales, volver
+        // al mensaje genérico "Correo o contraseña incorrectos."
+        setError(`${error.message} (código: ${error.status ?? "?"})`);
+        return;
+      }
+      router.push("/inicio");
+      router.refresh();
+    } catch (err: any) {
+      // Cualquier excepción (p. ej. una URL de Supabase mal formada) se
+      // muestra en pantalla en vez de tumbar toda la página.
+      setError(`Excepción: ${err?.message ?? String(err)}`);
+    } finally {
+      setCargando(false);
     }
-    router.push("/inicio");
-    router.refresh();
   }
 
   return (
@@ -82,6 +89,12 @@ export default function LoginPage() {
             </a>
           </p>
         </form>
+
+        {/* Temporal, solo para depurar el despliegue: confirma qué URL quedó
+            realmente incluida en el sitio. Quitar una vez resuelto. */}
+        <p className="text-center text-xs text-gray-400 mt-4 break-all">
+          URL configurada: {process.env.NEXT_PUBLIC_SUPABASE_URL || "(vacía)"}
+        </p>
       </div>
     </div>
   );
