@@ -60,5 +60,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icons).*)"],
+  // Excluye también cualquier archivo estático por extensión (imágenes, etc.):
+  // sin esto, una petición a un archivo público sin sesión activa (p. ej.
+  // /logo-rewa.png en la propia pantalla de login) quedaba redirigida a
+  // /login en vez de servirse, mostrando un ícono roto.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icons|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico)$).*)"],
 };
