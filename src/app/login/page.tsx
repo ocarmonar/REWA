@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { crearClienteNavegador } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -29,15 +27,19 @@ export default function LoginPage() {
         // el problema de acceso. Antes de mostrarlo a usuarios finales, volver
         // al mensaje genérico "Correo o contraseña incorrectos."
         setError(`${error.message} (código: ${error.status ?? "?"})`);
+        setCargando(false);
         return;
       }
-      router.push("/inicio");
-      router.refresh();
+      // Recarga completa (no router.push del lado del cliente): así la
+      // siguiente petición al servidor lleva ya la cookie de sesión recién
+      // guardada. Con una navegación "suave" existía una condición de carrera
+      // donde el servidor a veces no veía la cookie todavía y rebotaba de
+      // vuelta a /login, entrando en un ciclo con el middleware.
+      window.location.href = "/inicio";
     } catch (err: any) {
       // Cualquier excepción (p. ej. una URL de Supabase mal formada) se
       // muestra en pantalla en vez de tumbar toda la página.
       setError(`Excepción: ${err?.message ?? String(err)}`);
-    } finally {
       setCargando(false);
     }
   }
