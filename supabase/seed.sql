@@ -199,9 +199,9 @@ begin
         insert into sesiones (horario_id, fecha, hora_inicio, hora_fin, estado)
         values (
           v_horario.id, v_fecha, v_horario.hora_inicio, v_horario.hora_fin,
-          case when v_fecha < current_date then 'realizada'
-               when v_fecha = current_date then 'programada'
-               else 'programada' end
+          (case when v_fecha < current_date then 'realizada'
+                when v_fecha = current_date then 'programada'
+                else 'programada' end)::estado_sesion
         )
         on conflict (horario_id, fecha) do nothing;
       end if;

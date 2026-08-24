@@ -25,7 +25,10 @@ export default function LoginPage() {
 
     setCargando(false);
     if (error) {
-      setError("Correo o contraseña incorrectos.");
+      // Temporal: se muestra el mensaje real de Supabase para diagnosticar
+      // el problema de acceso. Antes de mostrarlo a usuarios finales, volver
+      // al mensaje genérico "Correo o contraseña incorrectos."
+      setError(`${error.message} (código: ${error.status ?? "?"})`);
       return;
     }
     router.push("/inicio");
