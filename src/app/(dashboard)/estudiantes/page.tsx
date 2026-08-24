@@ -35,9 +35,14 @@ export default async function EstudiantesPage({ searchParams }: { searchParams: 
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-rewa-azul">Estudiantes</h1>
         {usuario.rol === "administrador" && (
-          <Link href="/estudiantes/nuevo" className="bg-rewa-azul text-white text-sm px-4 py-2 rounded-md font-medium">
-            + Nuevo estudiante
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/estudiantes/importar" className="bg-white border border-gray-300 text-sm px-4 py-2 rounded-md font-medium">
+              Importar Excel/CSV
+            </Link>
+            <Link href="/estudiantes/nuevo" className="bg-rewa-azul text-white text-sm px-4 py-2 rounded-md font-medium">
+              + Nuevo estudiante
+            </Link>
+          </div>
         )}
       </div>
 

@@ -47,3 +47,55 @@ export async function crearEstudiante(formData: FormData) {
   revalidatePath("/estudiantes");
   redirect("/estudiantes");
 }
+
+export interface FilaImportacion {
+  nombres: string;
+  apellidos: string;
+  fecha_nacimiento: string;
+  campusId: string;
+  representante_nombre: string;
+  representante_telefono: string;
+  curso: string | null;
+}
+
+export async function importarEstudiantes(nombreArchivo: string, filas: FilaImportacion[]) {
+  const usuario = await obtenerUsuarioActual();
+  requiereRol(usuario, ["administrador"]);
+  const supabase = crearClienteServidor();
+
+  let creados = 0;
+  if (filas.length > 0) {
+    const { data, error } = await supabase
+      .from("estudiantes")
+      .insert(
+        filas.map((f) => ({
+          nombres: f.nombres,
+          apellidos: f.apellidos,
+          fecha_nacimiento: f.fecha_nacimiento,
+          campus_principal_id: f.campusId,
+          representante_nombre: f.representante_nombre,
+          representante_telefono: f.representante_telefono,
+          curso: f.curso || null,
+        }))
+      )
+      .select("id");
+
+    if (error) throw new Error(error.message);
+    creados = data?.length ?? 0;
+  }
+
+  // Auditoría de la importación (EST-12), aunque no todas las filas del
+  // archivo original hayan sido válidas (esas ya se descartaron antes de
+  // llegar aquí, en la vista previa).
+  await supabase.from("importaciones_estudiantes").insert({
+    nombre_archivo: nombreArchivo,
+    usuario_id: usuario.id,
+    total_filas: filas.length,
+    total_creados: creados,
+    total_actualizados: 0,
+    total_errores: 0,
+  });
+
+  revalidatePath("/estudiantes");
+  return { creados };
+}
