@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cerrarSesion } from "@/app/actions/auth";
 import type { RolUsuario } from "@/lib/types";
@@ -36,7 +35,8 @@ export default function Sidebar({
   return (
     <aside className="w-60 shrink-0 bg-rewa-azul text-white min-h-screen flex flex-col">
       <div className="p-5 border-b border-white/10 flex items-center gap-3">
-        <Image src="/logo-rewa.png" alt="" width={40} height={40} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-rewa.png" alt="" width={40} height={40} />
         <div>
           <p className="font-bold leading-tight">Club Deportivo</p>
           <p className="font-bold leading-tight text-lg">REWA</p>
