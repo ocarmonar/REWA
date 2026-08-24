@@ -46,7 +46,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-rewa-azul px-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-8">
         <div className="text-center mb-6">
-          <Image src="/logo-rewa.png" alt="Club Deportivo REWA" width={87} height={87} className="mx-auto mb-2" priority />
+          <Image src="/logo-rewa.png" alt="Club Deportivo REWA" width={110} height={110} className="mx-auto mb-2" priority />
           <h1 className="text-2xl font-bold text-rewa-azul">Club Deportivo REWA</h1>
           <p className="text-sm text-gray-500 mt-1">Asistencia y pagos mensuales</p>
         </div>
