@@ -203,6 +203,7 @@ export default function PagoDetalle({
 
       <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6">
         <h2 className="font-semibold mb-3">Historial de pagos</h2>
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <tbody>
             {pagos.map((p) => (
@@ -233,10 +234,12 @@ export default function PagoDetalle({
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6">
         <h2 className="font-semibold mb-3">Descuentos, becas y exoneraciones</h2>
+        <div className="overflow-x-auto">
         <table className="w-full text-sm mb-4">
           <tbody>
             {ajustes.map((a) => (
@@ -258,6 +261,7 @@ export default function PagoDetalle({
             )}
           </tbody>
         </table>
+        </div>
 
         <form onSubmit={enviarAjuste} className="grid grid-cols-2 gap-3 border-t pt-4">
           <div>

@@ -72,6 +72,7 @@ export default function PagosPorCampus({
               </span>
             </button>
             {abierto && (
+              <div className="overflow-x-auto">
               <table className="w-full text-sm border-t border-gray-200">
                 <thead className="bg-gray-50 text-left text-gray-500">
                   <tr>
@@ -105,6 +106,7 @@ export default function PagosPorCampus({
                   })}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         );

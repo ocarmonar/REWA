@@ -16,7 +16,7 @@ export default async function RamasPage() {
         El costo se aplica a las mensualidades que se generen de ahora en adelante; no modifica las ya generadas.
       </p>
 
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-left text-gray-500">
             <tr>

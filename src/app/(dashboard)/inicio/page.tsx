@@ -5,9 +5,9 @@ import type { Kpis } from "@/lib/types";
 
 function TarjetaKpi({ titulo, valor, color }: { titulo: string; valor: string; color?: string }) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-      <p className="text-sm text-gray-500">{titulo}</p>
-      <p className={`text-2xl font-bold mt-1 ${color ?? "text-gray-900"}`}>{valor}</p>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-5 min-w-0">
+      <p className="text-sm text-gray-500 truncate">{titulo}</p>
+      <p className={`text-xl sm:text-2xl font-bold mt-1 break-words ${color ?? "text-gray-900"}`}>{valor}</p>
     </div>
   );
 }
@@ -29,7 +29,7 @@ export default async function InicioPage() {
         {new Intl.DateTimeFormat("es-EC", { dateStyle: "full", timeZone: "America/Guayaquil" }).format(new Date())}
       </p>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <TarjetaKpi titulo="Estudiantes activos" valor={String(kpis?.estudiantes_activos ?? 0)} />
         <TarjetaKpi titulo="Profesores activos" valor={String(kpis?.profesores_activos ?? 0)} />
         <TarjetaKpi titulo="Sesiones hoy" valor={String(kpis?.sesiones_hoy ?? 0)} />

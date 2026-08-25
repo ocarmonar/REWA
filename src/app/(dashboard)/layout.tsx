@@ -5,9 +5,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const usuario = await obtenerUsuarioActual();
 
   return (
-    <div className="flex">
+    <div className="md:flex">
       <Sidebar rol={usuario.rol} nombre={`${usuario.nombres} ${usuario.apellidos}`} />
-      <main className="flex-1 min-h-screen p-6">{children}</main>
+      <main className="flex-1 min-h-screen min-w-0 p-4 md:p-6">{children}</main>
     </div>
   );
 }
