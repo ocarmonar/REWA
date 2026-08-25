@@ -5,3 +5,9 @@
 body {
   @apply bg-gray-50 text-gray-900;
 }
+
+/* Poppins en encabezados, igual que en rewa.com.ec; el resto del texto
+   se queda en la fuente de sistema (también como en el sitio real). */
+h1, h2, h3 {
+  @apply font-heading;
+}

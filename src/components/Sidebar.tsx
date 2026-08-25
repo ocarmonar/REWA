@@ -37,7 +37,7 @@ export default function Sidebar({
       <div className="p-5 border-b border-white/10 flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo-rewa.png" alt="" width={40} height={40} />
-        <div>
+        <div className="font-heading">
           <p className="font-bold leading-tight">Club Deportivo</p>
           <p className="font-bold leading-tight text-lg">REWA</p>
         </div>
@@ -50,8 +50,8 @@ export default function Sidebar({
             <Link
               key={item.href}
               href={item.href}
-              className={`block rounded-md px-3 py-2 text-sm font-medium transition ${
-                activo ? "bg-white/15" : "hover:bg-white/10"
+              className={`block rounded-md px-3 py-2 text-sm font-medium transition border-l-4 ${
+                activo ? "bg-white/10 border-rewa-dorado" : "border-transparent hover:bg-white/10"
               }`}
             >
               {item.etiqueta}
