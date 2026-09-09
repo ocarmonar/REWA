@@ -8,6 +8,7 @@ export default async function ImportarEstudiantesPage() {
 
   const supabase = crearClienteServidor();
   const { data: campus } = await supabase.from("campus").select("*").eq("activo", true).order("nombre");
+  const { data: ramas } = await supabase.from("ramas").select("*").eq("activo", true).order("nombre");
   const { data: existentes } = await supabase.from("estudiantes").select("nombres, apellidos, fecha_nacimiento");
 
   return (
@@ -16,7 +17,7 @@ export default async function ImportarEstudiantesPage() {
         ← Volver a estudiantes
       </a>
       <h1 className="text-xl font-bold text-rewa-azul mb-6">Importar estudiantes (Excel/CSV)</h1>
-      <ImportarEstudiantes campus={campus ?? []} existentes={existentes ?? []} />
+      <ImportarEstudiantes campus={campus ?? []} ramas={ramas ?? []} existentes={existentes ?? []} />
     </div>
   );
 }

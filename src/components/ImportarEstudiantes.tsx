@@ -4,10 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 import { importarEstudiantes, type FilaImportacion } from "@/app/actions/estudiantes";
-import type { Campus } from "@/lib/types";
+import type { Campus, Rama } from "@/lib/types";
 
 interface FilaValidada extends FilaImportacion {
   campusNombreOriginal: string;
+  ramaNombreOriginal: string;
   errores: string[];
   duplicado: boolean;
 }
@@ -18,7 +19,10 @@ interface EstudianteExistente {
   fecha_nacimiento: string;
 }
 
-const ENCABEZADOS = ["nombres", "apellidos", "fecha_nacimiento", "campus", "representante_nombre", "representante_telefono", "curso"];
+// "rama" es obligatoria: un estudiante sin disciplina no aparece en ninguna
+// lista de asistencia ni se le genera mensualidad, así que importarlo sin ella
+// lo dejaba invisible para los dos módulos principales.
+const ENCABEZADOS = ["nombres", "apellidos", "fecha_nacimiento", "campus", "rama", "representante_nombre", "representante_telefono", "curso"];
 
 function normalizarFecha(valor: unknown): string {
   if (valor instanceof Date) {
@@ -34,11 +38,17 @@ function normalizarFecha(valor: unknown): string {
   return String(valor ?? "").trim();
 }
 
-function validarFila(fila: Record<string, unknown>, campus: Campus[], existentes: EstudianteExistente[]): FilaValidada {
+function validarFila(
+  fila: Record<string, unknown>,
+  campus: Campus[],
+  ramas: Rama[],
+  existentes: EstudianteExistente[]
+): FilaValidada {
   const nombres = String(fila.nombres ?? "").trim();
   const apellidos = String(fila.apellidos ?? "").trim();
   const fecha_nacimiento = normalizarFecha(fila.fecha_nacimiento);
   const campusNombreOriginal = String(fila.campus ?? "").trim();
+  const ramaNombreOriginal = String(fila.rama ?? "").trim();
   const representante_nombre = String(fila.representante_nombre ?? "").trim();
   const representante_telefono = String(fila.representante_telefono ?? "").trim();
   const curso = fila.curso ? String(fila.curso).trim() : null;
@@ -49,6 +59,8 @@ function validarFila(fila: Record<string, unknown>, campus: Campus[], existentes
   if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha_nacimiento)) errores.push("fecha_nacimiento debe ser AAAA-MM-DD");
   const campusEncontrado = campus.find((c) => c.nombre.toLowerCase() === campusNombreOriginal.toLowerCase());
   if (!campusEncontrado) errores.push(`campus "${campusNombreOriginal}" no existe`);
+  const ramaEncontrada = ramas.find((r) => r.nombre.toLowerCase() === ramaNombreOriginal.toLowerCase());
+  if (!ramaEncontrada) errores.push(`rama "${ramaNombreOriginal}" no existe`);
   if (!representante_nombre) errores.push("representante_nombre es obligatorio");
   if (!representante_telefono) errores.push("representante_telefono es obligatorio");
 
@@ -67,6 +79,8 @@ function validarFila(fila: Record<string, unknown>, campus: Campus[], existentes
     fecha_nacimiento,
     campusId: campusEncontrado?.id ?? "",
     campusNombreOriginal,
+    ramaId: ramaEncontrada?.id ?? "",
+    ramaNombreOriginal,
     representante_nombre,
     representante_telefono,
     curso,
@@ -77,9 +91,11 @@ function validarFila(fila: Record<string, unknown>, campus: Campus[], existentes
 
 export default function ImportarEstudiantes({
   campus,
+  ramas,
   existentes,
 }: {
   campus: Campus[];
+  ramas: Rama[];
   existentes: EstudianteExistente[];
 }) {
   const router = useRouter();
@@ -90,7 +106,9 @@ export default function ImportarEstudiantes({
 
   function descargarPlantilla() {
     const encabezado = ENCABEZADOS.join(",");
-    const ejemplo = "Juan,Pérez Ríos,2012-05-14,ISM North,María Ríos,0991234567,7mo EGB";
+    const campusEjemplo = campus[0]?.nombre ?? "ISM North";
+    const ramaEjemplo = ramas[0]?.nombre ?? "Fútbol";
+    const ejemplo = `Juan,Pérez Ríos,2012-05-14,${campusEjemplo},${ramaEjemplo},María Ríos,0991234567,7mo EGB`;
     const csv = "﻿" + encabezado + "\n" + ejemplo + "\n";
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -108,7 +126,7 @@ export default function ImportarEstudiantes({
     const libro = XLSX.read(buffer, { type: "array", cellDates: true });
     const hoja = libro.Sheets[libro.SheetNames[0]];
     const filasCrudas = XLSX.utils.sheet_to_json<Record<string, unknown>>(hoja, { defval: "" });
-    setFilas(filasCrudas.map((f) => validarFila(f, campus, existentes)));
+    setFilas(filasCrudas.map((f) => validarFila(f, campus, ramas, existentes)));
   }
 
   async function confirmar() {
@@ -139,6 +157,10 @@ export default function ImportarEstudiantes({
         <p className="text-sm text-gray-600 mb-3">
           1. Descarga la plantilla, complétala (Excel o CSV) y súbela. 2. Revisa la vista previa (errores y posibles
           duplicados). 3. Confirma la importación.
+        </p>
+        <p className="text-sm text-gray-600 mb-3">
+          Las columnas <strong>campus</strong> y <strong>rama</strong> deben escribirse igual que en el sistema.
+          Campus: {campus.map((c) => c.nombre).join(", ") || "—"}. Ramas: {ramas.map((r) => r.nombre).join(", ") || "—"}.
         </p>
         <div className="flex gap-3 flex-wrap items-center">
           <button onClick={descargarPlantilla} className="bg-white border border-gray-300 px-4 py-2 rounded-md text-sm font-medium">
@@ -176,6 +198,7 @@ export default function ImportarEstudiantes({
                   <th className="px-3 py-2">Apellidos</th>
                   <th className="px-3 py-2">Nacimiento</th>
                   <th className="px-3 py-2">Campus</th>
+                  <th className="px-3 py-2">Rama</th>
                   <th className="px-3 py-2">Estado</th>
                 </tr>
               </thead>
@@ -189,6 +212,7 @@ export default function ImportarEstudiantes({
                     <td className="px-3 py-2">{f.apellidos}</td>
                     <td className="px-3 py-2">{f.fecha_nacimiento}</td>
                     <td className="px-3 py-2">{f.campusNombreOriginal}</td>
+                    <td className="px-3 py-2">{f.ramaNombreOriginal}</td>
                     <td className="px-3 py-2">
                       {f.errores.length > 0 ? f.errores.join("; ") : f.duplicado ? "Posible duplicado" : "OK"}
                     </td>

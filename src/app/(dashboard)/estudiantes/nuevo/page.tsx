@@ -27,8 +27,10 @@ export default async function NuevoEstudiantePage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Rama (inscripción inicial)</label>
-            <select name="rama_id" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
-              <option value="">— Ninguna por ahora —</option>
+            {/* Obligatoria: sin rama el estudiante no aparece en ninguna lista
+                de asistencia ni se le genera mensualidad. */}
+            <select name="rama_id" required className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+              <option value="">— Selecciona una —</option>
               {(ramas ?? []).map((r) => <option key={r.id} value={r.id}>{r.nombre}</option>)}
             </select>
           </div>
