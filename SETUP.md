@@ -20,6 +20,14 @@ En el panel de Supabase: **SQL Editor → New query**.
 
 Esto crea las tablas, triggers, vistas, políticas RLS, y carga 3 campus, 4 ramas, 15 profesores, 60 estudiantes, horarios, sesiones con asistencia, y mensualidades/pagos de ejemplo. `schema.sql` también crea el bucket privado `documentos-rewa` en Supabase Storage (para comprobantes de pago) con sus políticas — no requiere ningún paso manual adicional en el panel de Supabase.
 
+### Migraciones (solo para una base que ya estaba funcionando)
+
+`schema.sql` ya incluye todo lo que hay en `supabase/migraciones/`. Esos archivos son para bases **creadas antes** de esos cambios: se ejecutan una sola vez, en orden, en el mismo SQL Editor. Son idempotentes (si se ejecutan dos veces no rompen ni duplican nada).
+
+| Archivo | Qué corrige |
+|---|---|
+| [`001_horarios_seguridad_y_pagos.sql`](supabase/migraciones/001_horarios_seguridad_y_pagos.sql) | Generación automática de sesiones desde los horarios; vistas que se saltaban RLS y exponían la cartera de deudas; alta de estudiantes en una sola transacción; tope de 100% en ajustes por porcentaje; "recaudación del mes" real; registro del saldo a favor. |
+
 ## 4. Crear los usuarios de autenticación (paso obligatorio)
 
 `seed.sql` crea las **filas de negocio** en la tabla `usuarios` (nombres, rol, email), pero **no crea usuarios reales de Supabase Auth** — son sistemas separados a propósito. Sin este paso nadie puede iniciar sesión.

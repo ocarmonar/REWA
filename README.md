@@ -44,17 +44,29 @@ El esquema SQL y las políticas RLS **ya cubren el sistema completo** de la espe
 
 Los siguientes módulos tienen esquema y reglas de negocio listos pero **no tienen pantalla propia en el MVP de Next.js** (sí están completos y funcionando en la demo HTML de un solo archivo, como referencia de comportamiento esperado):
 
-- CRUD completo de campus y horarios, y alta/edición de ramas más allá del costo (nombre, descripción, activar/desactivar).
+- CRUD de campus, y alta/edición de ramas más allá del costo (nombre, descripción, activar/desactivar).
+- Ficha y edición de un estudiante ya creado (cambiar datos, inscribirlo en una segunda rama, retirarlo).
 - Pantalla de justificaciones.
-- Importación masiva de estudiantes (Excel/CSV).
 - Consulta de auditoría.
+- Cancelar y reprogramar una sesión puntual (las acciones existen en `src/app/actions/asistencia.ts`, falta la pantalla).
 
 Construirlas es mecánicamente el mismo patrón ya usado en `src/app/actions/pagos.ts` y `src/app/(dashboard)/pagos/`: una Server Action por mutación + una página por vista, apoyándose en las políticas RLS que ya existen en `schema.sql`.
 
+## Horarios y sesiones (leer antes de operar)
+
+La asistencia funciona sobre **sesiones**, y las sesiones nacen de los **horarios**:
+
+1. En **Horarios** se carga la parrilla semanal fija: rama + campus + día + hora + profesor.
+2. De ahí se crean las sesiones concretas de cada fecha. Se generan de dos maneras, y ambas usan la misma función de la base (`fn_generar_sesiones`), así que producen exactamente lo mismo:
+   - **Automática**: el cron diario de Vercel (`/api/mantenimiento`, ver `vercel.json`) mantiene creadas las de los próximos 30 días y marca como "sin registro" las que ya pasaron sin que nadie pasara lista.
+   - **Manual**: el botón "Generar sesiones" de esa misma pantalla, para adelantarlas o crearlas de inmediato tras agregar un horario.
+3. Recién entonces aparecen en **Asistencia** para pasar lista.
+
+Si Asistencia se ve vacía, casi siempre es porque no hay horarios cargados (o están suspendidos). Esa misma tarea diaria mantiene despierto el proyecto de Supabase, que en el plan gratuito se pausa tras ~7 días sin peticiones.
+
 ## Limitaciones conocidas
 
-- **Excel (.xlsx) real**: el MVP y la demo aceptan `.csv`; la librería `xlsx` está en `package.json` pero la UI de importación aún no la usa para leer `.xlsx` binario.
-- **Comprobantes/adjuntos**: no hay subida de archivos real todavía (ver Supuestos).
+- **Sin paginación**: los listados de estudiantes, pagos y reportes traen todas las filas de una vez. Supabase corta en 1000 filas *en silencio*, así que pasado ese volumen faltarían registros sin ningún aviso.
 - **Sin recibos PDF**: por decisión explícita del cliente (ver especificación, punto 5).
 - **Sin notificaciones automáticas**: por decisión explícita del cliente (punto 8); solo alertas visuales dentro de la app.
 
