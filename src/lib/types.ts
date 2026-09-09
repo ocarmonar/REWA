@@ -158,6 +158,7 @@ export interface Mensualidad {
   total_a_pagar: number;
   total_pagado: number;
   saldo: number;
+  saldo_a_favor: number; // pagado de más tras un ajuste posterior
   estado: EstadoMensualidad;
   estado_efectivo?: EstadoMensualidad; // proviene de v_mensualidades
   fecha_limite: string;

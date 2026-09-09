@@ -18,6 +18,7 @@ const ITEMS: ItemNav[] = [
   { href: "/estudiantes", etiqueta: "Estudiantes", roles: ["administrador", "gerente"] },
   { href: "/profesores", etiqueta: "Profesores", roles: ["administrador", "gerente"] },
   { href: "/ramas", etiqueta: "Ramas y costos", roles: ["administrador", "gerente"] },
+  { href: "/horarios", etiqueta: "Horarios", roles: ["administrador", "gerente"] },
   { href: "/mis-asignaciones", etiqueta: "Mis asignaciones", roles: ["profesor"] },
   { href: "/pagos", etiqueta: "Pagos", roles: ["administrador", "gerente"] },
   { href: "/reportes", etiqueta: "Reportes", roles: ["administrador", "gerente"] },

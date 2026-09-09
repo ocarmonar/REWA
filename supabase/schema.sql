@@ -218,6 +218,9 @@ create table mensualidades (
   total_a_pagar numeric(10,2) not null default 0,
   total_pagado numeric(10,2) not null default 0,
   saldo numeric(10,2) not null default 0,
+  -- Lo pagado de más cuando un ajuste posterior baja el total: sin esta
+  -- columna el excedente se perdía al recortar el saldo a 0.
+  saldo_a_favor numeric(10,2) not null default 0,
   estado estado_mensualidad not null default 'pendiente',
   fecha_limite date not null,
   observacion text,
@@ -235,7 +238,10 @@ create table ajustes_mensualidad (
   motivo text not null,
   usuario_id uuid not null references usuarios(id),
   fecha timestamptz not null default now(),
-  estado estado_ajuste not null default 'activo'
+  estado estado_ajuste not null default 'activo',
+  -- Un porcentaje mayor a 100 no tiene sentido y ensuciaba los reportes
+  -- (p. ej. un "descuento" de $250 sobre una mensualidad de $50).
+  constraint ck_ajuste_porcentaje_max check (valor_tipo <> 'porcentaje' or valor <= 100)
 );
 
 create table pagos (
@@ -317,6 +323,7 @@ declare
   v_total_a_pagar numeric(10,2);
   v_total_pagado numeric(10,2) := 0;
   v_saldo numeric(10,2);
+  v_saldo_a_favor numeric(10,2);
   v_estado estado_mensualidad;
   v_estado_actual estado_mensualidad;
   v_tiene_exoneracion_total boolean := false;
@@ -373,6 +380,9 @@ begin
     end if;
   end if;
 
+  -- Lo pagado de más queda visible en vez de desaparecer al recortar el saldo.
+  v_saldo_a_favor := greatest(v_total_pagado - v_total_a_pagar, 0);
+
   update mensualidades
      set total_descuentos = v_desc,
          total_becas = v_beca,
@@ -380,6 +390,7 @@ begin
          total_a_pagar = v_total_a_pagar,
          total_pagado = v_total_pagado,
          saldo = v_saldo,
+         saldo_a_favor = v_saldo_a_favor,
          estado = v_estado
    where id = p_mensualidad_id;
 end;
@@ -613,8 +624,14 @@ select
   (select count(*) from sesiones where fecha = current_date and estado in ('sin_registro','programada')) as sesiones_sin_registro_hoy,
   (select coalesce(sum(saldo),0) from v_mensualidades where estado_efectivo in ('pendiente','parcial')) as pagos_pendientes_monto,
   (select coalesce(sum(saldo),0) from v_mensualidades where estado_efectivo = 'vencido') as pagos_vencidos_monto,
-  (select coalesce(sum(total_pagado),0) from mensualidades
-     where periodo_mes = extract(month from current_date) and periodo_anio = extract(year from current_date)) as recaudacion_mes_actual;
+  -- Dinero efectivamente cobrado DENTRO del mes calendario en curso (no lo
+  -- pagado sobre las mensualidades del periodo, que ignora cuándo entró el
+  -- dinero y deja fuera los pagos atrasados de meses anteriores).
+  (select coalesce(sum(p.monto),0) from pagos p
+    where p.estado = 'activo'
+      and p.fecha_pago >= date_trunc('month', current_date)::date
+      and p.fecha_pago < (date_trunc('month', current_date) + interval '1 month')::date
+  ) as recaudacion_mes_actual;
 
 -- Cartera pendiente por estudiante (PAG-23)
 create or replace view v_cartera_pendiente as
@@ -624,6 +641,23 @@ from v_mensualidades m
 join estudiantes e on e.id = m.estudiante_id
 join ramas r on r.id = m.rama_id
 where m.estado_efectivo in ('pendiente','parcial','vencido');
+
+-- Por defecto una vista se ejecuta con los permisos de su DUEÑO, lo que la
+-- haría IGNORAR las políticas RLS de mensualidades/pagos: cualquiera con la
+-- llave pública (anon, que viaja en el navegador) podría leer la cartera
+-- completa de deudas. security_invoker las ejecuta con los permisos de quien
+-- consulta; el revoke quita además el acceso a las llaves anónimas.
+alter view v_mensualidades set (security_invoker = on);
+alter view v_cartera_pendiente set (security_invoker = on);
+alter view v_kpis set (security_invoker = on);
+
+revoke all on v_mensualidades from anon;
+revoke all on v_cartera_pendiente from anon;
+revoke all on v_kpis from anon;
+
+grant select on v_mensualidades to authenticated;
+grant select on v_cartera_pendiente to authenticated;
+grant select on v_kpis to authenticated;
 
 -- ============================================================================
 -- ROW LEVEL SECURITY
@@ -747,7 +781,11 @@ create policy p_sesiones_profesor_update on sesiones for update
     )
   )
   with check (
-    fn_rol_actual() = 'profesor' and exists (
+    fn_rol_actual() = 'profesor'
+    -- Sin esta lista el profesor podía, por API, dejar sus sesiones en
+    -- 'cancelada': cancelar y reprogramar son del administrador.
+    and estado in ('programada','realizada','registro_completado','sin_registro')
+    and exists (
       select 1 from horarios h join profesor_rama pr
         on pr.rama_id = h.rama_id and pr.campus_id = h.campus_id
       where h.id = sesiones.horario_id and pr.profesor_id = fn_profesor_id_actual() and pr.activo
@@ -826,3 +864,135 @@ create policy p_storage_leer on storage.objects for select
     bucket_id = 'documentos-rewa'
     and (fn_rol_actual() in ('administrador', 'gerente') or owner = auth.uid())
   );
+
+-- ============================================================================
+-- OPERACIONES DE NEGOCIO EXPUESTAS A LA APLICACIÓN (RPC)
+-- ============================================================================
+-- Todas son SECURITY INVOKER (por defecto): las políticas RLS siguen
+-- aplicando, así que no son puertas traseras. El chequeo de rol que hacen
+-- adentro solo sirve para devolver un mensaje claro en vez de un error
+-- críptico de Postgres.
+
+-- Crea las sesiones de cada horario activo dentro del rango de fechas.
+-- Sin esto las sesiones solo existían si alguien las insertaba a mano: el
+-- módulo de asistencia se quedaba vacío en cuanto se agotaban las de prueba.
+-- Los roles de base de datos permitidos cubren la llamada automática del cron
+-- diario (service_role) y la ejecución manual desde el SQL Editor (postgres).
+create or replace function fn_generar_sesiones(p_desde date, p_hasta date)
+returns integer
+language plpgsql
+as $$
+declare
+  v_creadas integer := 0;
+begin
+  if p_hasta < p_desde then
+    raise exception 'La fecha final no puede ser anterior a la inicial.';
+  end if;
+  if p_hasta - p_desde > 400 then
+    raise exception 'El rango no puede superar 400 días.';
+  end if;
+  if fn_rol_actual() is distinct from 'administrador'
+     and current_user not in ('service_role', 'postgres', 'supabase_admin') then
+    raise exception 'Solo el administrador puede generar sesiones.';
+  end if;
+
+  with dias as (
+    select d::date as fecha
+    from generate_series(p_desde, p_hasta, interval '1 day') as d
+  ),
+  nuevas as (
+    insert into sesiones (horario_id, fecha, hora_inicio, hora_fin, estado)
+    select h.id, dias.fecha, h.hora_inicio, h.hora_fin, 'programada'::estado_sesion
+    from horarios h
+    join dias
+      -- extract(dow) devuelve 0=domingo .. 6=sábado; el array traduce ese
+      -- número al enum dia_semana sin depender del idioma del servidor.
+      on h.dia = (array['domingo','lunes','martes','miercoles','jueves','viernes','sabado']::dia_semana[])
+                 [extract(dow from dias.fecha)::int + 1]
+    where h.estado = 'activo'
+    on conflict (horario_id, fecha) do nothing
+    returning 1
+  )
+  select count(*) into v_creadas from nuevas;
+
+  return v_creadas;
+end;
+$$;
+
+-- Mantenimiento diario (lo llama el cron de Vercel): mantiene creadas las
+-- sesiones de los próximos días y marca como "sin_registro" las que ya
+-- pasaron sin que nadie pasara lista.
+create or replace function fn_mantenimiento_sesiones(p_dias_adelante integer default 30)
+returns integer
+language plpgsql
+as $$
+declare
+  v_creadas integer;
+begin
+  v_creadas := fn_generar_sesiones(current_date, current_date + p_dias_adelante);
+
+  update sesiones
+     set estado = 'sin_registro'
+   where fecha < current_date
+     and estado = 'programada';
+
+  return v_creadas;
+end;
+$$;
+
+-- Alta de estudiantes (individual o masiva desde Excel) en UNA transacción:
+-- el estudiante y su inscripción en la rama se guardan juntos o no se guarda
+-- ninguno. Antes eran dos llamadas separadas: si fallaba la segunda quedaba un
+-- estudiante sin rama —invisible para asistencia y para las mensualidades— y
+-- el usuario, al reintentar, lo duplicaba.
+create or replace function fn_guardar_estudiantes(p_filas jsonb)
+returns integer
+language plpgsql
+as $$
+declare
+  v_fila jsonb;
+  v_id uuid;
+  v_rama uuid;
+  v_creados integer := 0;
+begin
+  if fn_rol_actual() is distinct from 'administrador' then
+    raise exception 'Solo el administrador puede registrar estudiantes.';
+  end if;
+
+  for v_fila in select value from jsonb_array_elements(p_filas) loop
+    insert into estudiantes (
+      nombres, apellidos, fecha_nacimiento, campus_principal_id,
+      contacto_telefono, contacto_email,
+      representante_nombre, representante_telefono, representante_email,
+      curso, contacto_emergencia_nombre, contacto_emergencia_telefono,
+      observaciones_medicas
+    ) values (
+      v_fila->>'nombres',
+      v_fila->>'apellidos',
+      (v_fila->>'fecha_nacimiento')::date,
+      (v_fila->>'campus_principal_id')::uuid,
+      nullif(v_fila->>'contacto_telefono', ''),
+      nullif(v_fila->>'contacto_email', ''),
+      v_fila->>'representante_nombre',
+      v_fila->>'representante_telefono',
+      nullif(v_fila->>'representante_email', ''),
+      nullif(v_fila->>'curso', ''),
+      nullif(v_fila->>'contacto_emergencia_nombre', ''),
+      nullif(v_fila->>'contacto_emergencia_telefono', ''),
+      nullif(v_fila->>'observaciones_medicas', '')
+    )
+    returning id into v_id;
+
+    v_rama := nullif(v_fila->>'rama_id', '')::uuid;
+    if v_rama is not null then
+      insert into estudiante_rama (estudiante_id, rama_id, campus_id)
+      values (v_id, v_rama, (v_fila->>'campus_principal_id')::uuid)
+      on conflict (estudiante_id, rama_id) do nothing;
+    end if;
+
+    v_creados := v_creados + 1;
+  end loop;
+
+  return v_creados;
+end;
+$$;
