@@ -21,11 +21,37 @@ export default async function AsistenciaPage({
   const supabase = crearClienteServidor();
   const fecha = searchParams.fecha || fechaLocalDeHoy();
 
-  const { data: sesiones } = await supabase
+  const { data: sesionesRaw } = await supabase
     .from("sesiones")
     .select("id, fecha, hora_inicio, hora_fin, estado, horarios(rama_id, campus_id, ramas(nombre), campus(nombre))")
     .eq("fecha", fecha)
     .order("hora_inicio");
+
+  // El profesor solo debe ver las sesiones de las ramas y campus que tiene
+  // asignados. Antes se listaban las de todo el club y hasta se le ofrecía
+  // "Pasar lista" en los grupos de sus compañeros; recién al abrir la sesión
+  // se le bloqueaba. El filtro se hace por el par (rama, campus): filtrar por
+  // cada campo por separado dejaría pasar combinaciones que no tiene asignadas.
+  let sesiones = sesionesRaw ?? [];
+  if (usuario.rol === "profesor") {
+    const { data: profesor } = await supabase
+      .from("profesores")
+      .select("id")
+      .eq("usuario_id", usuario.id)
+      .eq("activo", true)
+      .maybeSingle();
+
+    const { data: asignaciones } = await supabase
+      .from("profesor_rama")
+      .select("rama_id, campus_id")
+      .eq("profesor_id", profesor?.id ?? "")
+      .eq("activo", true);
+
+    const propias = new Set((asignaciones ?? []).map((a) => `${a.rama_id}|${a.campus_id}`));
+    sesiones = sesiones.filter((s: any) =>
+      propias.has(`${s.horarios?.rama_id}|${s.horarios?.campus_id}`)
+    );
+  }
 
   return (
     <div>

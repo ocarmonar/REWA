@@ -42,12 +42,16 @@ export default async function SesionPage({ params }: { params: { id: string } })
     }
   }
 
+  // Se exige que estén activos tanto la inscripción como el propio estudiante:
+  // sin el segundo filtro, un estudiante retirado del club seguía apareciendo
+  // en la lista de asistencia (la generación de mensualidades sí lo excluía).
   const { data: inscritos } = await supabase
     .from("estudiante_rama")
-    .select("estudiante_id, estudiantes(id, nombres, apellidos, foto_url)")
+    .select("estudiante_id, estudiantes!inner(id, nombres, apellidos, foto_url, estado)")
     .eq("rama_id", horario.rama_id)
     .eq("campus_id", horario.campus_id)
-    .eq("estado", "activo");
+    .eq("estado", "activo")
+    .eq("estudiantes.estado", "activo");
 
   const { data: asistenciasExistentes } = await supabase
     .from("asistencias")

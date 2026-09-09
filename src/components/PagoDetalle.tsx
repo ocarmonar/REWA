@@ -149,6 +149,17 @@ export default function PagoDetalle({
           <dt className="font-bold">Saldo</dt>
           <dd className="text-right font-bold">{formatoMoneda(mensualidad.saldo)}</dd>
         </dl>
+
+        {/* Lo pagado de más (p. ej. se registró el pago y después se aplicó una
+            beca) antes desaparecía al recortar el saldo a 0. Ahora queda a la
+            vista para que se devuelva o se acredite al siguiente mes. */}
+        {mensualidad.saldo_a_favor > 0 && (
+          <div className="mt-4 bg-blue-50 border border-blue-200 text-blue-900 rounded-md p-3 text-sm">
+            <strong>Saldo a favor: {formatoMoneda(mensualidad.saldo_a_favor)}</strong> — se pagó más de lo
+            que quedó por cobrar tras aplicar los ajustes. Queda pendiente de devolver o de acreditar al
+            siguiente periodo.
+          </div>
+        )}
       </div>
 
       {!esExoneradoOAnulado && mensualidad.saldo > 0 && (

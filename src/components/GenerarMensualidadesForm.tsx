@@ -11,9 +11,16 @@ export default function GenerarMensualidadesForm({ mes, anio }: { mes: number; a
   function generar() {
     startTransition(async () => {
       try {
-        const total = await generarMensualidadesDelPeriodo(mes, anio);
+        const { creadas, revisadas } = await generarMensualidadesDelPeriodo(mes, anio);
         router.refresh();
-        alert(`Se generaron mensualidades para el periodo (${total} inscripciones activas revisadas).`);
+        // Se informa lo realmente creado, no las inscripciones revisadas: al
+        // regenerar un periodo ya generado, repetir el total hacía creer que
+        // se habían duplicado las mensualidades.
+        alert(
+          creadas === 0
+            ? `No había mensualidades nuevas que generar: las ${revisadas} inscripciones activas ya tenían la de este periodo.`
+            : `Se generaron ${creadas} mensualidad${creadas === 1 ? "" : "es"} nueva${creadas === 1 ? "" : "s"} (de ${revisadas} inscripciones activas revisadas).`
+        );
       } catch (err: any) {
         alert(err.message);
       }

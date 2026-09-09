@@ -82,16 +82,29 @@ export async function generarMensualidadesDelPeriodo(periodoMes: number, periodo
     creado_por: usuario.id,
   }));
 
+  let creadas = 0;
   if (filas.length > 0) {
-    // ignora duplicados (RN-04: una sola mensualidad por estudiante/rama/periodo)
-    await supabase.from("mensualidades").upsert(filas, {
-      onConflict: "estudiante_id,rama_id,periodo_mes,periodo_anio",
-      ignoreDuplicates: true,
-    });
+    // ignora duplicados (RN-04: una sola mensualidad por estudiante/rama/periodo).
+    // Con .select() solo vuelven las filas realmente insertadas, así que el
+    // número que se informa es el de mensualidades nuevas y no el de
+    // inscripciones revisadas: al regenerar un periodo ya generado, ahora dice
+    // "0 nuevas" en vez de repetir el total y hacer creer que se duplicó algo.
+    const { data, error } = await supabase
+      .from("mensualidades")
+      .upsert(filas, {
+        onConflict: "estudiante_id,rama_id,periodo_mes,periodo_anio",
+        ignoreDuplicates: true,
+      })
+      .select("id");
+
+    // Sin este chequeo, un fallo (permisos, restricción, red) se reportaba
+    // como éxito y el usuario creía que el periodo estaba generado.
+    if (error) throw new Error(error.message);
+    creadas = data?.length ?? 0;
   }
 
   revalidatePath("/pagos");
-  return filas.length;
+  return { creadas, revisadas: filas.length };
 }
 
 export async function registrarPago(
