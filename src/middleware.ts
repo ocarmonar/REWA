@@ -82,9 +82,11 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Excluye también cualquier archivo estático por extensión (imágenes, etc.):
-  // sin esto, una petición a un archivo público sin sesión activa (p. ej.
-  // /logo-rewa.png en la propia pantalla de login) quedaba redirigida a
-  // /login en vez de servirse, mostrando un ícono roto.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icons|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico)$).*)"],
+  // Excluye también /api (rutas propias, como el ping de Vercel Cron que no
+  // manda sesión y no debe rebotar a /login) y cualquier archivo estático
+  // por extensión (imágenes, etc.): sin esto, una petición a un archivo
+  // público sin sesión activa (p. ej. /logo-rewa.png en la propia pantalla
+  // de login) quedaba redirigida a /login en vez de servirse, mostrando un
+  // ícono roto.
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|manifest.json|sw.js|icons|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico)$).*)"],
 };
