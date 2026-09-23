@@ -56,8 +56,8 @@ export default function GenerarSesionesForm({
         {sesionesFuturas === 0
           ? "No hay ninguna sesión creada de hoy en adelante: Asistencia va a aparecer vacía hasta que se generen."
           : `Hay ${sesionesFuturas} sesión${sesionesFuturas === 1 ? "" : "es"} creada${sesionesFuturas === 1 ? "" : "s"} de hoy en adelante.`}{" "}
-        Cada noche se generan solas las de los próximos 30 días; este botón sirve para adelantarlas o
-        para crearlas de inmediato después de agregar un horario.
+        Todos los días, cerca de las 7:00, se generan solas las de los próximos 30 días; este botón sirve para
+        adelantarlas o para crearlas de inmediato después de agregar un horario.
       </p>
 
       {puedeGenerar && (
