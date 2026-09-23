@@ -26,16 +26,51 @@ const ENCABEZADOS = ["nombres", "apellidos", "fecha_nacimiento", "campus", "rama
 
 function normalizarFecha(valor: unknown): string {
   if (valor instanceof Date) {
-    const y = valor.getFullYear();
-    const m = String(valor.getMonth() + 1).padStart(2, "0");
-    const d = String(valor.getDate()).padStart(2, "0");
+    // Un Date de SheetJS representa una medianoche, pero según el caso en UTC o
+    // en hora local; leído con getDate() en Ecuador (UTC-5), una medianoche UTC
+    // cae en el día ANTERIOR. Sumar 12 horas y leer en UTC da el día correcto
+    // en ambos casos.
+    const mediodia = new Date(valor.getTime() + 12 * 60 * 60 * 1000);
+    const y = mediodia.getUTCFullYear();
+    const m = String(mediodia.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(mediodia.getUTCDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
   }
   if (typeof valor === "number") {
+    // Número de serie de Excel: conversión aritmética, sin zonas horarias.
     const parsed = XLSX.SSF.parse_date_code(valor);
     if (parsed) return `${parsed.y}-${String(parsed.m).padStart(2, "0")}-${String(parsed.d).padStart(2, "0")}`;
   }
-  return String(valor ?? "").trim();
+  const texto = String(valor ?? "").trim();
+  // DD/MM/AAAA (o con guiones): el formato habitual en Ecuador, y el que usa
+  // Excel en español al guardar como CSV.
+  const dma = texto.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  if (dma) return `${dma[3]}-${dma[2].padStart(2, "0")}-${dma[1].padStart(2, "0")}`;
+  return texto;
+}
+
+// Lee el archivo sin dejar que SheetJS "adivine" tipos, que era la causa de dos
+// errores de datos: fechas de nacimiento guardadas un día antes, y acentos y
+// eñes convertidos en basura ("FÃºtbol") en los CSV sin BOM, como los que
+// exporta Google Sheets.
+// - CSV: el texto lo decodificamos nosotros (UTF-8; si no es UTF-8 válido, el
+//   Windows-1252 que usa Excel en Windows) y se parsea con raw: todo llega como
+//   texto, así que las fechas quedan tal cual se escribieron y los teléfonos
+//   conservan su 0 inicial.
+// - Excel: las fechas llegan como número de serie (sin cellDates), que
+//   normalizarFecha convierte sin pasar por zonas horarias.
+async function leerLibro(file: File): Promise<XLSX.WorkBook> {
+  const buffer = await file.arrayBuffer();
+  if (file.name.toLowerCase().endsWith(".csv")) {
+    let texto: string;
+    try {
+      texto = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    } catch {
+      texto = new TextDecoder("windows-1252").decode(buffer);
+    }
+    return XLSX.read(texto.replace(/^﻿/, ""), { type: "string", raw: true });
+  }
+  return XLSX.read(buffer, { type: "array" });
 }
 
 function validarFila(
@@ -56,7 +91,14 @@ function validarFila(
   const errores: string[] = [];
   if (!nombres) errores.push("nombres es obligatorio");
   if (!apellidos) errores.push("apellidos es obligatorio");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha_nacimiento)) errores.push("fecha_nacimiento debe ser AAAA-MM-DD");
+  // Además del formato se comprueba que la fecha exista (un 30 de febrero
+  // pasaría el patrón y haría fallar la importación entera en la base).
+  const fechaComoDate = new Date(`${fecha_nacimiento}T00:00:00Z`);
+  const fechaValida =
+    /^\d{4}-\d{2}-\d{2}$/.test(fecha_nacimiento) &&
+    !isNaN(fechaComoDate.getTime()) &&
+    fechaComoDate.toISOString().slice(0, 10) === fecha_nacimiento;
+  if (!fechaValida) errores.push("fecha_nacimiento no es válida (use DD/MM/AAAA o AAAA-MM-DD)");
   const campusEncontrado = campus.find((c) => c.nombre.toLowerCase() === campusNombreOriginal.toLowerCase());
   if (!campusEncontrado) errores.push(`campus "${campusNombreOriginal}" no existe`);
   const ramaEncontrada = ramas.find((r) => r.nombre.toLowerCase() === ramaNombreOriginal.toLowerCase());
@@ -122,8 +164,7 @@ export default function ImportarEstudiantes({
   async function procesarArchivo(file: File) {
     setResultado(null);
     setNombreArchivo(file.name);
-    const buffer = await file.arrayBuffer();
-    const libro = XLSX.read(buffer, { type: "array", cellDates: true });
+    const libro = await leerLibro(file);
     const hoja = libro.Sheets[libro.SheetNames[0]];
     const filasCrudas = XLSX.utils.sheet_to_json<Record<string, unknown>>(hoja, { defval: "" });
     setFilas(filasCrudas.map((f) => validarFila(f, campus, ramas, existentes)));
