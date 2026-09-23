@@ -23,6 +23,14 @@ function conTimeout<T>(promesa: Promise<T>): Promise<T | typeof SE_AGOTO_EL_TIEM
 // Refresca la sesión de Supabase en cada request y protege rutas por rol.
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
+  const ruta = request.nextUrl.pathname;
+
+  // /auth/*: destino de los enlaces que llegan por correo (p. ej. restablecer
+  // contraseña). Quien lo abre todavía no tiene sesión —la ruta es justamente
+  // la que se la da—, así que no se le puede exigir ni redirigir.
+  if (ruta.startsWith("/auth/")) {
+    return response;
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -56,7 +64,9 @@ export async function middleware(request: NextRequest) {
 
   const user = resultado.data.user;
 
-  const rutaPublica = request.nextUrl.pathname === "/login";
+  // Pantallas para quien NO tiene sesión. /recuperar faltaba aquí: el enlace
+  // "¿Olvidaste tu contraseña?" rebotaba de vuelta a /login.
+  const rutaPublica = ruta === "/login" || ruta === "/recuperar";
 
   if (!user && !rutaPublica) {
     const url = request.nextUrl.clone();

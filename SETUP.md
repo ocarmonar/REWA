@@ -104,3 +104,45 @@ vercel
 `vercel` sube la carpeta tal cual está y te pregunta las variables de entorno la primera vez (o pégalas después en el dashboard, igual que en el Camino A). Para volver a publicar un cambio, repite `vercel --prod`.
 
 **Costo estimado para este volumen** (~60 estudiantes, 15 profesores, 3 campus, algunos comprobantes/adjuntos en PDF o foto): el plan gratuito de Supabase (incluye 1 GB de almacenamiento de archivos) y el plan Hobby de Vercel alcanzan sin problema; solo se necesitaría upgrade si el club crece a varios cientos de usuarios concurrentes o acumula miles de comprobantes.
+
+## 9. Recuperación de contraseña («¿Olvidaste tu contraseña?»)
+
+El flujo es: `/recuperar` pide el correo → Supabase envía un enlace → `/auth/confirmar` valida el enlace e inicia sesión → `/actualizar-contrasena` guarda la contraseña nueva. El código ya está; para que el correo **salga y lleve al lugar correcto** hacen falta tres ajustes en el panel de Supabase.
+
+### 9.1 URL del sitio (obligatorio)
+
+**Authentication → URL Configuration**:
+
+- **Site URL**: `https://rewa-registro.vercel.app`
+- **Redirect URLs**: agrega `https://rewa-registro.vercel.app/**`
+
+Sin esto Supabase ignora la dirección de retorno y el enlace del correo lleva a `localhost`.
+
+### 9.2 Servidor de correo propio (obligatorio para los profesores)
+
+El servicio de correo que Supabase trae por defecto **solo entrega a los miembros de tu organización en Supabase** y apenas envía un par de correos por hora. Un profesor que pida recuperar su contraseña nunca recibiría el correo. Hay que configurar un SMTP propio en **Authentication → Emails → SMTP Settings**. La opción más simple, con una cuenta de Gmail del club:
+
+1. En esa cuenta de Google, activa la verificación en dos pasos y crea una **contraseña de aplicación** en [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+2. En Supabase activa **Enable custom SMTP** y completa:
+   - Host: `smtp.gmail.com` · Port: `465`
+   - Username: el correo de Gmail del club
+   - Password: la contraseña de aplicación de 16 letras (no la contraseña normal)
+   - Sender email: el mismo correo · Sender name: `Club Deportivo REWA`
+3. Guarda.
+
+Gmail permite unos 500 envíos al día, de sobra para recuperaciones de contraseña. Si el club maneja su dominio `rewa.com.ec`, un servicio como Resend permite enviar desde una dirección del dominio.
+
+### 9.3 Plantilla del correo (recomendado)
+
+Con la plantilla que trae Supabase, el enlace **solo funciona si se abre en el mismo navegador donde se pidió**. Con la app instalada en el celular eso falla a menudo: el enlace se abre en el navegador interno de Gmail, que no es el de la app. Esta plantilla funciona desde cualquier dispositivo.
+
+En **Authentication → Emails → Templates → Reset Password**, reemplaza el contenido por:
+
+```html
+<h2>Restablecer contraseña</h2>
+<p>Recibimos un pedido para cambiar la contraseña de tu cuenta en la app del Club Deportivo REWA.</p>
+<p><a href="{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=recovery">Elegir una contraseña nueva</a></p>
+<p>Si no lo pediste, ignora este correo: tu contraseña no cambia.</p>
+```
+
+`/auth/confirmar` acepta los dos formatos de enlace, así que la recuperación funciona también sin este paso, con la limitación del mismo navegador.
