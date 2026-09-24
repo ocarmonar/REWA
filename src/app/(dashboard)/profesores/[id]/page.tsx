@@ -3,6 +3,7 @@ import { obtenerUsuarioActual, requiereRol } from "@/lib/auth";
 import AsignacionesProfesor from "@/components/AsignacionesProfesor";
 import EstadoProfesor from "@/components/EstadoProfesor";
 import AccesoProfesor from "@/components/AccesoProfesor";
+import EliminarProfesor from "@/components/EliminarProfesor";
 import { sugerirContrasena } from "@/lib/utils";
 
 export default async function ProfesorDetallePage({ params }: { params: { id: string } }) {
@@ -57,6 +58,8 @@ export default async function ProfesorDetallePage({ params }: { params: { id: st
         campus={campus ?? []}
         ramas={ramas ?? []}
       />
+
+      <EliminarProfesor profesorId={profesor.id} nombre={`${profesor.nombres} ${profesor.apellidos}`} />
     </div>
   );
 }

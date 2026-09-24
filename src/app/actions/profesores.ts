@@ -259,3 +259,92 @@ export async function quitarAsignacion(asignacionId: string, profesorId: string)
   if (error) throw new Error(error.message);
   revalidatePath(`/profesores/${profesorId}`);
 }
+
+// Tablas que pueden guardar actividad hecha POR la cuenta del profesor. Si
+// alguna la referencia, el profesor tiene historial y no se puede borrar.
+const REFERENCIAS_A_USUARIO: [tabla: string, columna: string][] = [
+  ["asistencias", "usuario_registro"],
+  ["asistencias", "usuario_correccion"],
+  ["justificaciones", "usuario_id"],
+  ["sesiones", "usuario_cancelacion"],
+  ["profesor_rama", "asignado_por"],
+  ["mensualidades", "creado_por"],
+  ["ajustes_mensualidad", "usuario_id"],
+  ["pagos", "usuario_registro"],
+  ["pagos", "usuario_anulacion"],
+  ["importaciones_estudiantes", "usuario_id"],
+  ["auditoria", "usuario_id"],
+];
+
+// Borrado real, solo para un profesor SIN historial: típicamente uno creado
+// por error o de prueba, cuyo correo hay que liberar para registrar a la
+// persona de verdad. Con historial se desactiva en vez de borrar: eliminarlo
+// dejaría horarios sin responsable y asistencias registradas por "nadie".
+// Todas las revisiones van antes del primer borrado, para no dejar nada a
+// medias.
+export async function eliminarProfesor(profesorId: string) {
+  const { usuario } = await usuarioGestionActual();
+  const admin = crearClienteAdmin();
+
+  const { data: profesor } = await admin
+    .from("profesores")
+    .select("id, nombres, apellidos, telefono, email, activo, usuario_id, usuarios(id, auth_user_id, rol)")
+    .eq("id", profesorId)
+    .maybeSingle();
+  if (!profesor) throw new Error("Profesor no encontrado.");
+
+  const cuenta = (profesor as any).usuarios as { id: string; auth_user_id: string | null; rol: string } | null;
+  // Nunca borrar por esta vía una cuenta de administrador o gerente.
+  if (cuenta && cuenta.rol !== "profesor") {
+    throw new Error("Esta ficha está vinculada a una cuenta que no es de profesor; no se puede eliminar desde aquí.");
+  }
+
+  async function contar(tabla: string, columna: string, valor: string) {
+    const { count, error } = await admin.from(tabla).select("id", { count: "exact", head: true }).eq(columna, valor);
+    if (error) throw new Error(error.message);
+    return count ?? 0;
+  }
+
+  const horarios = await contar("horarios", "profesor_id", profesorId);
+  if (horarios > 0) {
+    throw new Error(
+      `No se puede eliminar: es responsable de ${horarios} horario${horarios === 1 ? "" : "s"}. Desactívalo en vez de eliminarlo.`
+    );
+  }
+  if (cuenta) {
+    for (const [tabla, columna] of REFERENCIAS_A_USUARIO) {
+      if ((await contar(tabla, columna, cuenta.id)) > 0) {
+        throw new Error("No se puede eliminar: ya tiene actividad registrada en la app (por ejemplo, pasó lista). Desactívalo en vez de eliminarlo.");
+      }
+    }
+  }
+
+  // Con la llave de servicio: la revisión de rol ya se hizo arriba, y así un
+  // borrado bloqueado por RLS no pasa en silencio (RLS no da error, solo borra 0 filas).
+  const pasos: [string, () => PromiseLike<{ error: { message: string } | null }>][] = [
+    ["sus asignaciones", () => admin.from("profesor_rama").delete().eq("profesor_id", profesorId)],
+    ["el profesor", () => admin.from("profesores").delete().eq("id", profesorId)],
+  ];
+  if (cuenta) pasos.push(["su usuario", () => admin.from("usuarios").delete().eq("id", cuenta.id)]);
+  for (const [que, paso] of pasos) {
+    const { error } = await paso();
+    if (error) throw new Error(`No se pudo eliminar ${que}: ${error.message}`);
+  }
+  if (cuenta?.auth_user_id) {
+    const { error } = await admin.auth.admin.deleteUser(cuenta.auth_user_id);
+    if (error) throw new Error(`Se eliminó el profesor, pero no su cuenta de acceso: ${error.message}`);
+  }
+
+  // El trigger de auditoría de profesores no cubre DELETE: se registra aquí.
+  const { usuarios: _cuenta, ...datos } = profesor as any;
+  await admin.from("auditoria").insert({
+    tabla_afectada: "profesores",
+    registro_id: profesorId,
+    accion: "eliminar",
+    valor_anterior: datos,
+    valor_nuevo: null,
+    usuario_id: usuario.id,
+  });
+
+  revalidatePath("/profesores");
+}
