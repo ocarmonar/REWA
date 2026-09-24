@@ -21,6 +21,25 @@ export function fechaLocalDeHoy(): string {
   return `${valores.year}-${valores.month}-${valores.day}`;
 }
 
+// Contraseña fácil de recordar para un profesor, a pedido del club:
+// disciplina + campus + año, p. ej. "futbolquito2026", "volynorth2026",
+// "basquetwest2026". Es solo una sugerencia: quien da el acceso puede cambiarla.
+const ABREVIATURAS_RAMA: Record<string, string> = { basquetbol: "basquet", voleybol: "voly" };
+
+function soloLetras(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+export function sugerirContrasena(rama?: string | null, campus?: string | null): string {
+  const r = rama ? ABREVIATURAS_RAMA[soloLetras(rama)] ?? soloLetras(rama) : "rewa";
+  const c = campus ? soloLetras(campus).replace(/^ism/, "") : "";
+  return `${r}${c}${fechaLocalDeHoy().slice(0, 4)}`;
+}
+
 export function formatoMoneda(valor: number): string {
   return new Intl.NumberFormat("es-EC", {
     style: "currency",

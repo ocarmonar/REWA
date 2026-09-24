@@ -27,6 +27,7 @@ Esto crea las tablas, triggers, vistas, políticas RLS, y carga 3 campus, 4 rama
 | Archivo | Qué corrige |
 |---|---|
 | [`001_horarios_seguridad_y_pagos.sql`](supabase/migraciones/001_horarios_seguridad_y_pagos.sql) | Generación automática de sesiones desde los horarios; vistas que se saltaban RLS y exponían la cartera de deudas; alta de estudiantes en una sola transacción; tope de 100% en ajustes por porcentaje; "recaudación del mes" real; registro del saldo a favor. |
+| [`002_auditoria_security_definer.sql`](supabase/migraciones/002_auditoria_security_definer.sql) | Las funciones de auditoría no podían escribir en `auditoria` (RLS de solo lectura), así que desde la app fallaban los pagos, ajustes, cambios de costo, altas/asignaciones/bajas de profesores y correcciones de asistencia. |
 
 ## 4. Crear los usuarios de autenticación (paso obligatorio)
 
@@ -45,7 +46,7 @@ update usuarios set auth_user_id = 'UUID-COPIADO-DE-GERENTE' where email = 'gere
 update usuarios set auth_user_id = 'UUID-COPIADO-DE-PROFE1' where email = 'profe1@rewa.ec';
 ```
 
-En producción, este vínculo lo haría automáticamente la pantalla "Nuevo usuario" del módulo AUTH-03 (Admin gestiona usuarios) usando la Admin API de Supabase con la `service_role key` — no está incluida en el MVP de UI, pero el patrón es: `supabase.auth.admin.createUser()` seguido de un `insert`/`update` en `usuarios` con el `id` devuelto.
+Este paso manual solo hace falta para las cuentas de **administrador y gerente**. Los **profesores** se crean desde la app (Profesores → + Nuevo profesor → «Darle acceso a la app», o «Dar acceso» en su ficha): la app usa la `service_role key` en el servidor para llamar a `supabase.auth.admin.createUser()`, crear su fila en `usuarios` y vincularla. Desde la misma ficha se le puede poner una contraseña nueva si la olvida.
 
 ## 5. Variables de entorno
 

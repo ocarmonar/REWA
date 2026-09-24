@@ -465,6 +465,12 @@ create trigger trg_mensualidad_recalcular_insert
 after insert on mensualidades
 for each row execute function fn_after_mensualidad_insert();
 
+-- Todas las funciones de auditoría son SECURITY DEFINER: "auditoria" tiene RLS
+-- con una sola política de LECTURA, así que corriendo con los permisos de quien
+-- hace el cambio, el INSERT del registro de auditoría era rechazado y Postgres
+-- deshacía el cambio completo (pagos, ajustes, costos, profesores, asistencia).
+-- Una función de trigger no se puede invocar directamente, así que esto no
+-- permite inventar registros de auditoría.
 -- Auditoría automática para pagos (PAG-15/PAG-16/PAG-17)
 create or replace function fn_audit_pagos()
 returns trigger as $$
@@ -481,7 +487,7 @@ begin
   );
   return coalesce(new, old);
 end;
-$$ language plpgsql;
+$$ language plpgsql security definer set search_path = public;
 
 create trigger trg_audit_pagos
 after insert or update on pagos
@@ -497,7 +503,7 @@ begin
           to_jsonb(old), to_jsonb(new), coalesce(new.usuario_id, old.usuario_id));
   return coalesce(new, old);
 end;
-$$ language plpgsql;
+$$ language plpgsql security definer set search_path = public;
 
 create trigger trg_audit_ajustes
 after insert or update on ajustes_mensualidad
@@ -513,7 +519,7 @@ begin
           to_jsonb(old), to_jsonb(new), coalesce(new.asignado_por, old.asignado_por));
   return coalesce(new, old);
 end;
-$$ language plpgsql;
+$$ language plpgsql security definer set search_path = public;
 
 create trigger trg_audit_profesor_rama
 after insert or update or delete on profesor_rama
@@ -555,7 +561,7 @@ begin
   end if;
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql security definer set search_path = public;
 
 create trigger trg_audit_ramas
 after update on ramas
@@ -579,7 +585,7 @@ begin
   );
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql security definer set search_path = public;
 
 create trigger trg_audit_profesores
 after insert or update on profesores
@@ -595,7 +601,7 @@ begin
   end if;
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql security definer set search_path = public;
 
 create trigger trg_audit_asistencia
 after update on asistencias

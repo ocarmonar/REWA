@@ -2,6 +2,8 @@ import { crearClienteServidor } from "@/lib/supabase/server";
 import { obtenerUsuarioActual, requiereRol } from "@/lib/auth";
 import AsignacionesProfesor from "@/components/AsignacionesProfesor";
 import EstadoProfesor from "@/components/EstadoProfesor";
+import AccesoProfesor from "@/components/AccesoProfesor";
+import { sugerirContrasena } from "@/lib/utils";
 
 export default async function ProfesorDetallePage({ params }: { params: { id: string } }) {
   const usuario = await obtenerUsuarioActual();
@@ -11,7 +13,7 @@ export default async function ProfesorDetallePage({ params }: { params: { id: st
 
   const { data: profesor } = await supabase
     .from("profesores")
-    .select("id, nombres, apellidos, telefono, activo")
+    .select("id, nombres, apellidos, telefono, email, activo, usuarios(email)")
     .eq("id", params.id)
     .single();
 
@@ -38,6 +40,16 @@ export default async function ProfesorDetallePage({ params }: { params: { id: st
         <EstadoProfesor profesorId={profesor.id} activo={profesor.activo} />
       </div>
       <p className="text-sm text-gray-500 mb-6">{profesor.telefono}</p>
+
+      <AccesoProfesor
+        profesorId={profesor.id}
+        correoAcceso={(profesor as any).usuarios?.email ?? null}
+        correoProfesor={profesor.email}
+        sugerencia={sugerirContrasena(
+          (asignaciones as any)?.[0]?.rama?.nombre,
+          (asignaciones as any)?.[0]?.campus?.nombre
+        )}
+      />
 
       <AsignacionesProfesor
         profesorId={profesor.id}

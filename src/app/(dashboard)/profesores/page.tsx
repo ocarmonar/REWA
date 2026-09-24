@@ -9,7 +9,7 @@ export default async function ProfesoresPage() {
   const supabase = crearClienteServidor();
   const { data: profesores } = await supabase
     .from("profesores")
-    .select("id, nombres, apellidos, telefono, activo, profesor_rama(id, activo)")
+    .select("id, nombres, apellidos, telefono, activo, usuario_id, profesor_rama(id, activo)")
     .order("apellidos");
 
   return (
@@ -31,6 +31,7 @@ export default async function ProfesoresPage() {
               <th className="px-4 py-2">Nombre</th>
               <th className="px-4 py-2">Teléfono</th>
               <th className="px-4 py-2">Asignaciones activas</th>
+              <th className="px-4 py-2">Acceso a la app</th>
               <th className="px-4 py-2">Estado</th>
               <th className="px-4 py-2"></th>
             </tr>
@@ -43,6 +44,7 @@ export default async function ProfesoresPage() {
                   <td className="px-4 py-2">{p.apellidos} {p.nombres}</td>
                   <td className="px-4 py-2">{p.telefono}</td>
                   <td className="px-4 py-2">{activas}</td>
+                  <td className="px-4 py-2">{p.usuario_id ? "Sí" : <span className="text-gray-400">Sin acceso</span>}</td>
                   <td className="px-4 py-2">
                     <span className={`text-xs font-medium px-2 py-1 rounded-full ${p.activo ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-800"}`}>
                       {p.activo ? "Activo" : "Inactivo"}

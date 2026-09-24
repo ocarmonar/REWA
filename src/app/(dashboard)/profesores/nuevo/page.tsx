@@ -1,9 +1,16 @@
 import { obtenerUsuarioActual, requiereRol } from "@/lib/auth";
-import { crearProfesor } from "@/app/actions/profesores";
+import { crearClienteServidor } from "@/lib/supabase/server";
+import NuevoProfesorForm from "@/components/NuevoProfesorForm";
 
 export default async function NuevoProfesorPage() {
   const usuario = await obtenerUsuarioActual();
   requiereRol(usuario, ["administrador", "gerente"]);
+
+  const supabase = crearClienteServidor();
+  const [{ data: campus }, { data: ramas }] = await Promise.all([
+    supabase.from("campus").select("id, nombre").eq("activo", true).order("nombre"),
+    supabase.from("ramas").select("id, nombre").eq("activo", true).order("nombre"),
+  ]);
 
   return (
     <div className="max-w-md">
@@ -11,32 +18,7 @@ export default async function NuevoProfesorPage() {
         ← Volver a profesores
       </a>
       <h1 className="text-xl font-bold text-rewa-azul mb-6">Nuevo profesor</h1>
-
-      <form action={crearProfesor} className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nombres</label>
-          <input name="nombres" required className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Apellidos</label>
-          <input name="apellidos" required className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono (opcional)</label>
-          <input name="telefono" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Correo (opcional)</label>
-          <input name="email" type="email" className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
-        </div>
-        <p className="text-xs text-gray-400">
-          Esto crea el registro del profesor. El acceso al sistema (usuario y contraseña) se vincula por
-          separado desde Supabase — ver SETUP.md.
-        </p>
-        <button type="submit" className="bg-rewa-azul text-white px-4 py-2 rounded-md text-sm font-medium">
-          Registrar profesor
-        </button>
-      </form>
+      <NuevoProfesorForm campus={campus ?? []} ramas={ramas ?? []} />
     </div>
   );
 }
